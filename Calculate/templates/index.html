@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智审云枢 | 合同智能计算器</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --sidebar-bg: #f1f7ff;
+            --main-bg: #f4f7fa;
+            --card-white: #ffffff;
+            --accent-color: #2563EB;
+            --accent-hover: #1d4ed8;
+        }
+
+        body { background-color: var(--main-bg); font-family: "PingFang SC", sans-serif; overflow: hidden; }
+        .glow-sphere { display: none; }
+
+        .sidebar { background-color: var(--sidebar-bg); width: 310px; z-index: 10; color: #1e293b; border-right: 1px solid #e2e8f0; padding: 1.25rem !important; }
+        .input-card { background-color: var(--card-white); border-radius: 16px; padding: 16px; border: 1px solid #e2e8f0; transition: all 0.3s ease; }
+        .input-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.02); }
+        .dark-result-panel { background-color: #ffffff; border-radius: 32px; color: #1e293b; padding: 24px; width: 340px; position: relative; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.03); }
+
+        .sidebar .w-10 { width: 3rem !important; height: 3rem !important; }
+        .sidebar .w-10 i { font-size: 1.4rem !important; }
+        .sidebar h2 { color: #1e293b !important; font-size: 1.1rem !important; margin-bottom: 2px; }
+        .sidebar .text-\[\#d4a373\] { color: #64748b !important; font-size: 0.75rem !important; }
+        .sidebar .bg-\[\#3a3b4c\] { background-color: var(--accent-color) !important; color: #ffffff !important; }
+
+        .menu-item { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-left: 4px solid transparent; color: #64748b; padding: 12px 16px !important; margin-bottom: 4px; cursor: pointer; }
+        .menu-item i.w-7 {
+            width: 2.25rem !important;
+            height: 2.25rem !important;
+            font-size: 1.15rem !important;
+            margin-right: 14px !important;
+            background: #ffffff !important;
+            border: 1px solid #e2e8f0;
+            color: #64748b !important;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .menu-item .text-\[13px\] { font-size: 15px !important; font-weight: 500; letter-spacing: 0.5px; }
+        .menu-item .text-\[10px\] { font-size: 11px !important; margin-top: 2px; }
+        .menu-item.active { background: rgba(37, 99, 235, 0.08); border-left-color: var(--accent-color); color: var(--accent-color); }
+        .menu-item.active i { background: var(--accent-color) !important; color: white !important; border-color: var(--accent-color) !important; }
+        .menu-item:hover:not(.active) { background: #e8f1ff; color: #1e293b; }
+
+        .sidebar .text-\[10px\].mt-4 { font-size: 12px !important; margin-top: 1.5rem !important; color: #64748b !important; }
+
+        .scan-line { position: absolute; top: -100%; left: 0; width: 100%; height: 100px; background: linear-gradient(to bottom, transparent, rgba(37, 99, 235, 0.1), transparent); z-index: 5; pointer-events: none; }
+        .scanning .scan-line { animation: scanAnim 1.2s ease-in-out; }
+        @keyframes scanAnim { 0% { top: -100%; } 100% { top: 100%; } }
+        .animate-in { animation: fadeInUp 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards; opacity: 0; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .type-option { flex: 1; background: white; border-radius: 12px; padding: 10px; text-align: center; cursor: pointer; border: 2px solid #e2e8f0; transition: 0.2s; }
+        .type-option.active { border-color: var(--accent-color) !important; background: #f0f7ff; transform: scale(1.02); }
+        .radio-dot { width: 12px; height: 12px; border: 2px solid #ccc; border-radius: 50%; margin: 0 auto 4px; }
+        .type-option.active .radio-dot { border-color: var(--accent-color) !important; background: radial-gradient(var(--accent-color) 40%, transparent 50%) !important; }
+
+        .text-slate-800 { color: #1e293b !important; }
+        .bg-\[\#dee5d5\] { background-color: #eff6ff !important; color: var(--accent-color) !important; }
+        .text-\[\#7a8a6e\] { color: var(--accent-color) !important; }
+        .text-\[\#d4a373\] { color: var(--accent-color) !important; }
+        .bg-\[\#fffdf0\]\/80 { background-color: #f8fafc !important; border: 1px solid #e2e8f0 !important; }
+        .focus\:border-\[\#d4a373\]:focus { border-color: var(--accent-color) !important; }
+
+        .bg-\[\#4a4b5d\] { background-color: var(--accent-color) !important; }
+        .hover\:bg-\[\#3a3b4c\]:hover { background-color: var(--accent-hover) !important; }
+
+        .dark-result-panel .opacity-30, .dark-result-panel .opacity-40 { color: #64748b !important; opacity: 1 !important; }
+        .dark-result-panel .bg-white\/5 { background-color: #f1f5f9 !important; color: #334155 !important; }
+        .bi-stars { color: var(--accent-color) !important; opacity: 0.2 !important; }
+        .bg-white\/30 { background-color: transparent !important; color: #94a3b8 !important; border: none !important; }
+
+        .batch-table-container::-webkit-scrollbar { width: 6px; height: 6px; }
+        .batch-table-container::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 3px; }
+        .batch-table-container::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 3px; }
+        .batch-table-container::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .type-interest { background: #dbeafe; color: #1e40af; }
+        .type-lawsuit { background: #dcfce7; color: #166534; }
+        .type-breach { background: #fed7aa; color: #9a3412; }
+        .type-delay { background: #fef3c7; color: #92400e; }
+        .type-execution { background: #e0e7ff; color: #3730a3; }
+        .type-preserve { background: #f1f5f9; color: #475569; }
+
+        /* ========= 返回首页按钮样式 (完全遵循要求的设计) ========= */
+        .home-btn {
+            position: fixed;
+            top: 32px;
+            right: 30px;
+            z-index: 30;           /* 高于侧边栏和内容，确保可见 */
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px 24px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(30, 62, 126, 0.1);
+            border: 1.5px solid var(--accent-color);
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: inherit;
+            cursor: pointer;
+            letter-spacing: 0.3px;
+            line-height: 1;
+        }
+
+        .home-btn:hover {
+            background: var(--accent-color);
+            color: #fff;
+            box-shadow: 0 10px 22px rgba(30, 62, 126, 0.25);
+            transform: translateY(-2px);
+            border-color: var(--accent-color);
+        }
+
+        .home-btn:active {
+            transform: translateY(1px);
+            transition: all 0.05s ease;
+        }
+
+        /* 手机屏幕上略微调整按钮位置，保持舒适 */
+        @media (max-width: 560px) {
+            .home-btn {
+                top: 20px;
+                right: 16px;
+                padding: 8px 18px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body class="h-screen flex relative">
+
+    <!--
+        ★ 返回首页按钮 ★
+        完全按照提供的样式实现: fixed定位, 右上角, 毛玻璃, 主题蓝边框,
+        悬停变蓝底白字。链接指向 http://127.0.0.1:8000 (根据需求设定)
+    -->
+    <a href="http://127.0.0.1:8000" class="home-btn" title="返回首页">
+        <i class="bi bi-house-door-fill" style="font-size: 1rem;"></i>
+        返回首页
+    </a>
+
+    <div class="glow-sphere w-[500px] h-[500px] bg-[#dbeafe] -top-20 -left-20"></div>
+    <div class="glow-sphere w-[400px] h-[400px] bg-[#eff6ff] bottom-0 right-1/4" style="animation-delay: -5s;"></div>
+
+    <!-- 侧边栏 -->
+    <aside class="sidebar h-full flex flex-col p-4 border-r border-black/5 animate-in">
+        <div class="flex items-center mb-6 px-2">
+            <div class="w-10 h-10 bg-[#3a3b4c] rounded-lg flex items-center justify-center text-white mr-3 shadow-lg">
+                <i class="bi bi-calculator"></i>
+            </div>
+            <div>
+                <h2 class="text-sm font-bold tracking-tight">合同智能计算器</h2>
+                <span class="text-[9px] text-[#d4a373] block -mt-1 uppercase">Legal AI Engine</span>
+            </div>
+        </div>
+
+        <div class="menu-list flex-1 overflow-y-auto space-y-1 pr-1">
+            <div onclick="showTab('interest')" id="nav-interest" class="menu-item active flex items-center p-2.5 rounded-xl cursor-pointer">
+                <i class="bi bi-currency-dollar w-7 h-7 bg-white rounded-full flex items-center justify-center mr-3 text-xs shadow-sm"></i>
+                <div class="leading-tight"><div class="text-[13px]">利息计算</div><span class="text-[10px] opacity-40">存/贷款利息</span></div>
+            </div>
+            <div onclick="showTab('breach')" id="nav-breach" class="menu-item flex items-center p-2.5 rounded-xl cursor-pointer">
+                <i class="bi bi-x-circle w-7 h-7 bg-white rounded-full flex items-center justify-center mr-3 text-xs shadow-sm"></i>
+                <div class="leading-tight"><div class="text-[13px]">违约金计算</div><span class="text-[10px] opacity-40">合同违约赔偿</span></div>
+            </div>
+            <div onclick="showTab('lawsuit')" id="nav-lawsuit" class="menu-item flex items-center p-2.5 rounded-xl cursor-pointer">
+                <i class="bi bi-file-earmark-text w-7 h-7 bg-white rounded-full flex items-center justify-center mr-3 text-xs shadow-sm"></i>
+                <div class="leading-tight"><div class="text-[13px]">诉讼费计算</div><span class="text-[10px] opacity-40">案件受理费用</span></div>
+            </div>
+            <div onclick="showTab('delay')" id="nav-delay" class="menu-item flex items-center p-2.5 rounded-xl cursor-pointer">
+                <i class="bi bi-clock-history w-7 h-7 bg-white rounded-full flex items-center justify-center mr-3 text-xs shadow-sm"></i>
+                <div class="leading-tight"><div class="text-[13px]">迟延履行利息</div><span class="text-[10px] opacity-40">加倍债务利息</span></div>
+            </div>
+            <div onclick="showTab('execution')" id="nav-execution" class="menu-item flex items-center p-2.5 rounded-xl cursor-pointer">
+                <i class="bi bi-clipboard-check w-7 h-7 bg-white rounded-full flex items-center justify-center mr-3 text-xs shadow-sm"></i>
+                <div class="leading-tight"><div class="text-[13px]">执行费计算</div><span class="text-[10px] opacity-40">强制执行费用</span></div>
+            </div>
+            <div onclick="showTab('preserve')" id="nav-preserve" class="menu-item flex items-center p-2.5 rounded-xl cursor-pointer">
+                <i class="bi bi-shield-check w-7 h-7 bg-white rounded-full flex items-center justify-center mr-3 text-xs shadow-sm"></i>
+                <div class="leading-tight"><div class="text-[13px]">财产保全费</div><span class="text-[10px] opacity-40">诉前/中保全</span></div>
+            </div>
+            <div onclick="showTab('compensation')" id="nav-compensation" class="menu-item flex items-center p-2.5 rounded-xl cursor-pointer">
+                <i class="bi bi-coin w-7 h-7 bg-white rounded-full flex items-center justify-center mr-3 text-xs shadow-sm"></i>
+                <div class="leading-tight"><div class="text-[13px]">赔偿金计算</div><span class="text-[10px] opacity-40">人身损害赔偿</span></div>
+            </div>
+            <div onclick="showTab('support')" id="nav-support" class="menu-item flex items-center p-2.5 rounded-xl cursor-pointer">
+                <i class="bi bi-people w-7 h-7 bg-white rounded-full flex items-center justify-center mr-3 text-xs shadow-sm"></i>
+                <div class="leading-tight"><div class="text-[13px]">抚养费计算</div><span class="text-[10px] opacity-40">子女抚养基准</span></div>
+            </div>
+        </div>
+
+        <div class="text-[10px] text-blue-400 mt-4 flex items-center font-medium">
+            <span class="w-2 h-2 bg-blue-400 rounded-full mr-2 shadow-[0_0_8px_#2563EB]"></span> 系统实时运行中
+        </div>
+    </aside>
+
+    <!-- 中间主操作区 -->
+    <main class="flex-1 p-6 flex flex-col items-center justify-center relative z-10">
+        <div class="w-full max-w-lg animate-in" style="animation-delay: 0.2s;">
+            <div class="mb-6">
+                <h1 id="title-text" class="text-3xl font-black text-slate-800 transition-all">利息计算 <span class="text-[10px] bg-[#dee5d5] px-2.5 py-1 rounded-full text-[#7a8a6e] align-middle ml-2">INTEREST</span></h1>
+                <p id="sub-text" class="text-gray-400 text-xs mt-1 font-medium">智能解析资金的时间价值与法律收益</p>
+            </div>
+
+            <div id="form-container" class="transition-all duration-500">
+                <div id="form-interest" class="form-section">
+                    <div class="input-card">
+                        <label class="text-[11px] font-black text-[#d4a373] mb-2 block uppercase tracking-wider">本金金额 (元)</label>
+                        <div class="flex items-center bg-[#fffdf0]/80 backdrop-blur-sm px-3 py-2 rounded-xl border border-[#f0edd8]">
+                            <span class="text-xl font-bold text-gray-300 mr-2">¥</span>
+                            <input type="number" id="int-val" class="bg-transparent text-2xl font-black w-full outline-none text-slate-800" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <div class="input-card">
+                        <label class="text-[11px] font-black text-[#d4a373] mb-3 block uppercase tracking-wider">利率模式</label>
+                        <div class="flex gap-3">
+                            <div id="type-fixed" onclick="setRateType('fixed')" class="type-option active shadow-sm">
+                                <div class="radio-dot"></div>
+                                <div class="text-[12px] font-bold">固定利率</div>
+                            </div>
+                            <div id="type-lpr" onclick="setRateType('lpr')" class="type-option shadow-sm">
+                                <div class="radio-dot"></div>
+                                <div class="text-[12px] font-bold">LPR利率</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="input-card">
+                            <label class="text-[11px] font-bold text-[#d4a373] mb-1 block">年利率 (%)</label>
+                            <input type="number" id="int-rate" class="w-full bg-white/80 border p-2 rounded-lg font-black text-base outline-none focus:border-[#2563EB]" value="3.7">
+                        </div>
+                        <div class="input-card">
+                            <label class="text-[11px] font-bold text-[#d4a373] mb-1 block">周期 (天)</label>
+                            <input type="number" id="int-days" class="w-full bg-white/80 border p-2 rounded-lg font-black text-base outline-none focus:border-[#2563EB]" value="365">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="form-simple" class="form-section hidden">
+                    <div class="input-card">
+                        <label id="simple-label" class="text-[11px] font-black text-[#d4a373] mb-2 block uppercase">标的金额 (元)</label>
+                        <input type="number" id="simple-val" class="w-full bg-[#fffdf0]/80 p-3 rounded-xl border border-[#f0edd8] text-xl font-black text-slate-800 outline-none" placeholder="0.00">
+                    </div>
+                    <div id="extra-input" class="input-card hidden">
+                        <label id="extra-label" class="text-[11px] font-black text-[#d4a373] mb-2 block uppercase">参数</label>
+                        <input type="number" id="extra-val" class="w-full bg-white border p-3 rounded-xl font-black outline-none text-slate-800" value="20">
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="runCalculate()" class="w-full bg-[#4a4b5d] text-white py-4 rounded-2xl text-lg font-bold hover:bg-[#3a3b4c] transform transition-all shadow-xl hover:-translate-y-1 active:scale-95 mt-4 relative overflow-hidden group">
+                <span class="relative z-10"><i class="bi bi-cpu-fill mr-2"></i> 立即智能计算</span>
+            </button>
+        </div>
+    </main>
+
+    <!-- 右侧结果面板 -->
+    <aside class="p-6 flex flex-col justify-center animate-in" style="animation-delay: 0.4s;">
+        <div id="result-container" class="dark-result-panel shadow-[0_20px_50px_rgba(0,0,0,0.15)]">
+            <div class="scan-line"></div>
+            <i class="bi bi-stars absolute top-6 right-6 text-[#2563EB]/40 text-xl"></i>
+            <div class="text-[10px] opacity-40 mb-1 uppercase tracking-widest font-bold">Calculation Result</div>
+            <div id="res-main" class="text-5xl font-black text-[#2563EB] mb-2 transition-all duration-300">¥0.00</div>
+            <div id="res-target" class="text-[11px] opacity-30 font-medium">标的金额: ¥0.00</div>
+
+            <div class="h-[1px] bg-slate-100 my-6"></div>
+
+            <div class="space-y-4">
+                <div class="flex justify-between items-center text-xs">
+                    <span class="opacity-40">简易程序参考</span>
+                    <span id="res-simple" class="font-bold text-[#2563EB] bg-blue-50 px-2 py-1 rounded">¥0.00</span>
+                </div>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="opacity-40">调解/撤诉减免</span>
+                    <span id="res-half" class="font-bold text-[#2563EB] bg-blue-50 px-2 py-1 rounded">¥0.00</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 bg-white/30 backdrop-blur-md border border-white/50 p-4 rounded-2xl text-[10px] text-gray-400 italic leading-relaxed text-center">
+            <i class="bi bi-shield-check mr-1"></i> 数据经 智审云枢 加密处理，符合司法解释标准。
+        </div>
+    </aside>
+
+    <!-- 批量操作悬浮按钮 -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <button onclick="toggleBatchPanel()" class="bg-[#2563EB] text-white p-3 rounded-full shadow-lg hover:bg-[#1d4ed8] transition-all flex items-center gap-2 text-sm">
+            <i class="bi bi-files"></i>
+            <span class="hidden md:inline">批量管理</span>
+        </button>
+    </div>
+
+    <!-- 批量操作面板 -->
+    <div id="batchPanel" class="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 hidden transition-all" onclick="toggleBatchPanel()">
+        <div class="absolute right-0 top-0 h-full w-96 bg-white shadow-2xl flex flex-col" onclick="event.stopPropagation()">
+            <div class="p-5 flex flex-col h-full">
+                <!-- 头部 -->
+                <div class="flex items-center justify-between mb-4 pb-2 border-b">
+                    <h3 class="text-lg font-bold text-gray-800">📋 批量案件管理</h3>
+                    <button onclick="toggleBatchPanel()" class="text-gray-400 hover:text-gray-600">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+
+                <!-- 操作按钮组 -->
+                <div class="grid grid-cols-2 gap-2 mb-4">
+                    <button onclick="downloadTemplate()" class="px-3 py-2 bg-gray-100 rounded-lg text-sm hover:bg-gray-200">
+                        <i class="bi bi-file-earmark-arrow-down mr-1"></i>下载模板
+                    </button>
+                    <label class="px-3 py-2 bg-[#2563EB] text-white rounded-lg text-sm cursor-pointer hover:bg-[#1d4ed8] text-center">
+                        <i class="bi bi-upload mr-1"></i>导入Excel
+                        <input type="file" id="excelFile" accept=".xlsx,.xls" class="hidden" onchange="importExcel()">
+                    </label>
+                    <button onclick="batchCalculate()" class="px-3 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">
+                        <i class="bi bi-calculator mr-1"></i>一键重算
+                    </button>
+                    <button onclick="exportExcel()" class="px-3 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700">
+                        <i class="bi bi-file-earmark-excel mr-1"></i>导出Excel
+                    </button>
+                    <button onclick="exportWord()" class="px-3 py-2 bg-orange-600 text-white rounded-lg text-sm hover:bg-orange-700">
+                        <i class="bi bi-file-text mr-1"></i>导出文书
+                    </button>
+                    <button onclick="clearAll()" class="px-3 py-2 bg-red-100 text-red-600 rounded-lg text-sm hover:bg-red-200">
+                        <i class="bi bi-trash mr-1"></i>清空
+                    </button>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="grid grid-cols-3 gap-2 mb-4">
+                    <div class="bg-blue-50 p-2 rounded-lg text-center">
+                        <div class="text-xs text-blue-600">总数</div>
+                        <div class="text-lg font-bold" id="totalCases">0</div>
+                    </div>
+                    <div class="bg-green-50 p-2 rounded-lg text-center">
+                        <div class="text-xs text-green-600">已计算</div>
+                        <div class="text-lg font-bold" id="calculatedCases">0</div>
+                    </div>
+                    <div class="bg-purple-50 p-2 rounded-lg text-center">
+                        <div class="text-xs text-purple-600">总标的</div>
+                        <div class="text-lg font-bold" id="totalAmount">¥0</div>
+                    </div>
+                </div>
+
+                <!-- 搜索框 -->
+                <div class="mb-3">
+                    <input type="text" id="searchCase" placeholder="搜索案件..."
+                           class="w-full px-3 py-2 border rounded-lg text-sm">
+                </div>
+
+                <!-- 案件列表 -->
+                <div class="flex-1 min-h-0 border rounded-lg overflow-hidden bg-white">
+                    <div class="h-full overflow-y-auto batch-table-container">
+                        <table class="w-full text-xs">
+                            <thead class="bg-gray-50 sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th class="p-2 text-left w-8">
+                                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th class="p-2 text-left">案件名称</th>
+                                    <th class="p-2 text-left">标的额</th>
+                                    <th class="p-2 text-left">计算类型</th>
+                                    <th class="p-2 text-left">计算结果</th>
+                                </tr>
+                            </thead>
+                            <tbody id="caseTableBody" class="divide-y">
+                                <tr><td colspan="5" class="p-4 text-center text-gray-400">暂无数据</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 底部批量操作 -->
+                <div id="batchFooter" class="mt-3 p-2 bg-gray-50 rounded-lg hidden">
+                    <div class="flex justify-between items-center text-xs">
+                        <span>已选 <span id="selectedCount">0</span> 个</span>
+                        <div>
+                            <button onclick="batchCalculate()" class="text-blue-600 mr-2">计算</button>
+                            <button onclick="exportExcel()" class="text-green-600">导出</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentTab = 'interest';
+
+        function showTab(id) {
+            currentTab = id;
+            document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-' + id).classList.add('active');
+
+            const config = {
+                'interest': ['利息计算', 'INTEREST', '智能解析存贷款利息'],
+                'breach': ['违约金计算', 'BREACH', '计算合同违约赔偿金'],
+                'lawsuit': ['诉讼费计算', 'LAWSUIT', '法院案件受理费标准'],
+                'delay': ['迟延履行利息', 'DELAY', '加倍债务利息计算'],
+                'execution': ['执行费计算', 'EXECUTION', '强制执行申请费用'],
+                'preserve': ['财产保全费', 'PRESERVE', '诉前及诉中保全费'],
+                'compensation': ['赔偿金计算', 'DAMAGES', '人身损害赔偿标准'],
+                'support': ['抚养费计算', 'SUPPORT', '子女抚养费支出基准']
+            };
+
+            document.getElementById('title-text').innerHTML = `${config[id][0]} <span class="text-[10px] bg-[#dee5d5] px-2.5 py-1 rounded-full text-[#7a8a6e] align-middle ml-2">${config[id][1]}</span>`;
+            document.getElementById('sub-text').innerText = config[id][2];
+
+            if(id === 'interest') {
+                document.getElementById('form-interest').classList.remove('hidden');
+                document.getElementById('form-simple').classList.add('hidden');
+            } else {
+                document.getElementById('form-interest').classList.add('hidden');
+                document.getElementById('form-simple').classList.remove('hidden');
+                if(['breach', 'delay', 'support'].includes(id)) {
+                    document.getElementById('extra-input').classList.remove('hidden');
+                    document.getElementById('extra-label').innerText = id === 'breach' ? '违约金比例 (%)' : (id === 'delay' ? '逾期天数' : '收入比例 (%)');
+                } else {
+                    document.getElementById('extra-input').classList.add('hidden');
+                }
+            }
+            resetRes();
+        }
+
+        function runCalculate() {
+            const container = document.getElementById('result-container');
+            container.classList.remove('scanning');
+            void container.offsetWidth;
+            container.classList.add('scanning');
+
+            let res = 0;
+            let target = 0;
+
+            if(currentTab === 'interest') {
+                target = parseFloat(document.getElementById('int-val').value) || 0;
+                let rate = parseFloat(document.getElementById('int-rate').value) || 0;
+                let days = parseFloat(document.getElementById('int-days').value) || 0;
+                res = target * (rate/100) * (days/365);
+            } else {
+                target = parseFloat(document.getElementById('simple-val').value) || 0;
+                let extra = parseFloat(document.getElementById('extra-val').value) || 0;
+
+                switch(currentTab) {
+                    case 'breach': res = target * (extra/100); break;
+                    case 'lawsuit':
+                        if (target <= 10000) res = 50;
+                        else if (target <= 100000) res = target * 0.025 - 200;
+                        else res = target * 0.02 + 300;
+                        break;
+                    case 'delay': res = target * 0.000175 * extra; break;
+                    case 'execution':
+                        if (target <= 10000) res = 50;
+                        else res = target * 0.015 - 100;
+                        break;
+                    case 'preserve':
+                        res = target <= 1000 ? 30 : Math.min(5000, target * 0.01 + 20);
+                        break;
+                    case 'compensation': res = target * 12; break;
+                    case 'support': res = target * (extra/100); break;
+                }
+            }
+
+            const mainRes = document.getElementById('res-main');
+            mainRes.style.transform = 'scale(1.1)';
+            setTimeout(() => {
+                mainRes.innerText = `¥${res.toLocaleString(undefined, {minimumFractionDigits:2})}`;
+                mainRes.style.transform = 'scale(1)';
+                document.getElementById('res-target').innerText = `标的金额: ¥${target.toLocaleString()}`;
+                document.getElementById('res-simple').innerText = `¥${(res * 0.5).toLocaleString()}`;
+                document.getElementById('res-half').innerText = `¥${(res * 0.5).toLocaleString()}`;
+            }, 200);
+        }
+
+        function resetRes() {
+            document.getElementById('res-main').innerText = "¥0.00";
+            document.getElementById('res-target').innerText = "标的金额: ¥0.00";
+        }
+
+        function setRateType(type) {
+            document.querySelectorAll('.type-option').forEach(el => el.classList.remove('active'));
+            document.getElementById('type-' + type).classList.add('active');
+            if(type === 'lpr') {
+                document.getElementById('int-rate').value = 3.45;
+                document.getElementById('int-rate').disabled = true;
+            } else {
+                document.getElementById('int-rate').disabled = false;
+            }
+        }
+
+        // ==================== 批量操作JavaScript (真实对接后端) ====================
+        let batchCases = [];
+        let selectedCases = new Set();
+
+        function getTypeDisplay(calcType) {
+            const typeMap = {
+                'interest': { name: '📈 利息', class: 'type-interest' },
+                '利息': { name: '📈 利息', class: 'type-interest' },
+                'lawsuit_fee': { name: '⚖️ 诉讼费', class: 'type-lawsuit' },
+                '诉讼费': { name: '⚖️ 诉讼费', class: 'type-lawsuit' },
+                'breach': { name: '⚠️ 违约金', class: 'type-breach' },
+                '违约金': { name: '⚠️ 违约金', class: 'type-breach' },
+                'delay': { name: '⏰ 迟延利息', class: 'type-delay' },
+                '迟延利息': { name: '⏰ 迟延利息', class: 'type-delay' },
+                'execution': { name: '💼 执行费', class: 'type-execution' },
+                '执行费': { name: '💼 执行费', class: 'type-execution' },
+                'preserve': { name: '🔒 保全费', class: 'type-preserve' },
+                '保全费': { name: '🔒 保全费', class: 'type-preserve' }
+            };
+            return typeMap[calcType] || { name: '📄 其他', class: 'type-preserve' };
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        function toggleBatchPanel() {
+            const panel = document.getElementById('batchPanel');
+            panel.classList.toggle('hidden');
+            if (!panel.classList.contains('hidden')) {
+                refreshBatchList(); // 每次打开面板时，获取最新数据
+            }
+        }
+
+        // 1. 下载模板
+        function downloadTemplate() {
+            window.location.href = '/batch/template';
+        }
+
+        // 2. 真实导入 Excel
+        async function importExcel() {
+            const fileInput = document.getElementById('excelFile');
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                showToast("正在导入...");
+                const response = await fetch('/batch/import', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    showToast(result.message);
+                    refreshBatchList(); // 导入成功后刷新列表
+                } else {
+                    showToast(result.error || "导入失败");
+                }
+            } catch (error) {
+                showToast("连接后端失败");
+            } finally {
+                fileInput.value = ''; // 清空选择，允许重复传同名文件
+            }
+        }
+
+        // 3. 获取并渲染列表
+        async function refreshBatchList() {
+            try {
+                const response = await fetch('/batch/cases');
+                const data = await response.json();
+                batchCases = data.cases || [];
+                updateBatchStats();
+                renderBatchTable();
+            } catch (error) {
+                console.error("获取数据失败", error);
+            }
+        }
+
+        function updateBatchStats() {
+            const total = batchCases.length;
+            const calculated = batchCases.filter(c => c.状态 === '已计算').length;
+            const totalAmount = batchCases.reduce((sum, c) => sum + (c.标的额 || 0), 0);
+            document.getElementById('totalCases').textContent = total;
+            document.getElementById('calculatedCases').textContent = calculated;
+            document.getElementById('totalAmount').textContent = '¥' + totalAmount.toLocaleString(undefined, {minimumFractionDigits:2});
+        }
+
+        function renderBatchTable() {
+            let html = '';
+            if(batchCases.length === 0) {
+                html = '<tr><td colspan="5" class="p-4 text-center text-gray-400">暂无数据</td></tr>';
+            } else {
+                batchCases.forEach(c => {
+                    const amountDisplay = (c.标的额 || 0).toLocaleString(undefined, {minimumFractionDigits:2});
+                    const resultDisplay = c.计算结果 !== null ? '¥' + c.计算结果.toLocaleString(undefined, {minimumFractionDigits:2}) : '-';
+                    const typeInfo = getTypeDisplay(c.计算类型);
+                    const checkedStr = selectedCases.has(c.id.toString()) ? 'checked' : '';
+
+                    html += `<tr class="hover:bg-gray-50">
+                             <td class="p-2"><input type="checkbox" class="case-checkbox" value="${c.id}" onchange="updateSelection(this)" ${checkedStr}></td>
+                             <td class="p-2" title="${escapeHtml(c.案件名称)}">${escapeHtml(c.案件名称).substring(0,8)}...</td>
+                             <td class="p-2">¥${amountDisplay}</td>
+                             <td class="p-2"><span class="type-badge ${typeInfo.class}">${typeInfo.name}</span></td>
+                             <td class="p-2 font-bold ${c.计算结果 !== null ? 'text-[#2563EB]' : 'text-gray-400'}">${resultDisplay}</td>
+                             </tr>`;
+                });
+            }
+            document.getElementById('caseTableBody').innerHTML = html;
+            updateFooter();
+        }
+
+        function updateSelection(checkbox) {
+            if (checkbox.checked) selectedCases.add(checkbox.value);
+            else selectedCases.delete(checkbox.value);
+            updateFooter();
+        }
+
+        function toggleSelectAll() {
+            const isAll = document.getElementById('selectAll').checked;
+            const checkboxes = document.querySelectorAll('.case-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = isAll;
+                if(isAll) selectedCases.add(cb.value);
+                else selectedCases.delete(cb.value);
+            });
+            updateFooter();
+        }
+
+        function updateFooter() {
+            document.getElementById('selectedCount').textContent = selectedCases.size;
+            const footer = document.getElementById('batchFooter');
+            if (selectedCases.size > 0) footer.classList.remove('hidden');
+            else footer.classList.add('hidden');
+        }
+
+        // 4. 一键计算
+        async function batchCalculate() {
+            showToast("正在计算...");
+            const caseIds = Array.from(selectedCases).map(id => parseInt(id));
+            try {
+                const response = await fetch('/batch/calculate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ case_ids: caseIds.length > 0 ? caseIds : null })
+                });
+                const result = await response.json();
+                if (result.success) {
+                    showToast(result.message);
+                    refreshBatchList();
+                }
+            } catch (error) {
+                showToast("计算失败");
+            }
+        }
+
+        // 5. 导出 Excel
+        async function exportExcel() {
+            showToast("正在生成Excel...");
+            const caseIds = Array.from(selectedCases).map(id => parseInt(id));
+            try {
+                const response = await fetch('/batch/export/excel', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ case_ids: caseIds.length > 0 ? caseIds : null })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `批量计算结果_${new Date().getTime()}.xlsx`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                }
+            } catch (error) {
+                showToast("导出失败");
+            }
+        }
+
+        // 6. 导出 文书
+        async function exportWord() {
+            showToast("正在生成文书...");
+            const caseIds = Array.from(selectedCases).map(id => parseInt(id));
+            try {
+                const response = await fetch('/batch/export/word', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ case_ids: caseIds.length > 0 ? caseIds : null })
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `批量报告_${new Date().getTime()}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    window.URL.revokeObjectURL(url);
+                }
+            } catch (error) {
+                showToast("导出失败");
+            }
+        }
+
+        // 7. 清空数据
+        async function clearAll() {
+            try {
+                const response = await fetch('/batch/clear', { method: 'POST' });
+                const result = await response.json();
+                if (result.success) {
+                    selectedCases.clear();
+                    refreshBatchList();
+                    showToast("已清空全部数据");
+                }
+            } catch (error) {
+                showToast("清空失败");
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-20 right-6 px-4 py-2 rounded-lg text-white text-sm z-50 bg-[#2563EB] shadow-lg transition-opacity duration-500';
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 500);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

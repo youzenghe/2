@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>模板内容</title>
+    <!-- 引用 Font Awesome 用于图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/github.min.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <style>
+        :root {
+            --accent-blue: #2563EB;
+            --deep-navy: #1E3E7E;
+            --bg-body: #F4F7FA;
+            --border: #E2E8F0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #343a40;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-body); /* 保持清爽的商务底色 */
+            display: flex;
+            min-height: 100vh;
+            flex-direction: column;
+            /* 背景水印图标已移除 */
+        }
+
+        .navbar {
+            background-color: var(--deep-navy);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 90%;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar.scrolled {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo::before {
+            content: "\f24e";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            margin-right: 12px;
+            font-size: 24px;
+        }
+
+        .nav-links a {
+            color: #ffffff;
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #E2E8F0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .document-header {
+            text-align: center;
+            padding: 120px 0 40px;
+            width: 100%;
+        }
+
+        .document-header h1 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #1E293B;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards 0.3s;
+            width: 100%;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background-color: var(--accent-blue); color: white; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-danger { background-color: #dc3545; color: white; }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .document-content {
+            background-color: #ffffff;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            margin-bottom: 60px;
+            opacity: 0;
+            animation: fadeIn 0.8s ease forwards 0.5s;
+            width: 100%;
+            max-width: 850px;
+            border: 1px solid var(--border);
+            line-height: 1.8;
+        }
+
+        #editor {
+            height: 500px;
+            background: white;
+            border-bottom-left-radius: 16px;
+            border-bottom-right-radius: 16px;
+        }
+
+        .ql-toolbar.ql-snow {
+            border-top-left-radius: 16px;
+            border-top-right-radius: 16px;
+            background: #f8fafc;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 拖拽卡片固定在右上方 */
+        .drag-drop-area {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 2px dashed var(--accent-blue);
+            border-radius: 12px;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            backdrop-filter: blur(4px);
+        }
+
+        .drag-drop-area:hover {
+            background-color: #fff;
+            transform: scale(1.02);
+        }
+
+        .drag-drop-area i {
+            margin-right: 10px;
+            color: var(--accent-blue);
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .navbar { padding: 15px 3%; width: 94%; }
+            .nav-links { display: none; }
+            .drag-drop-area { top: auto; bottom: 20px; left: 50%; right: auto; transform: translateX(-50%); }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <a href="#" class="logo">我的模板编辑</a>
+    <div class="nav-links">
+        <a href="http://127.0.0.1:8000">首页</a>
+        <a href="http://127.0.0.1:5030">返回</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="document-header">
+        <h1 id="documentTitle">{{ filename.split('.')[0] }}</h1>
+    </div>
+
+    <div class="action-buttons">
+        <button class="btn btn-primary" onclick="editFile()"><i class="fas fa-edit"></i> 编辑</button>
+        <button class="btn btn-secondary" onclick="downloadFile()"><i class="fas fa-download"></i> 下载</button>
+        <button class="btn btn-primary" onclick="renameFile()"><i class="fas fa-pen-to-square"></i> 重命名</button>
+        <button class="btn btn-danger" onclick="deleteFile()"><i class="fas fa-trash-can"></i> 删除</button>
+    </div>
+
+    <div class="document-content" id="view-mode">
+        <div id="contentDisplay">{{ content | safe }}</div>
+    </div>
+
+    <div class="document-content" id="edit-mode" style="display: none;">
+        <div id="editor"></div>
+        <div style="text-align: right; margin-top: 20px;">
+            <button class="btn btn-secondary" onclick="cancelEdit()">取消</button>
+            <button class="btn btn-primary" onclick="saveFile()">保存修改</button>
+        </div>
+    </div>
+</div>
+
+<div class="drag-drop-area" id="dragDropArea">
+    <i class="fas fa-cloud-arrow-down"></i> 拖拽至此快速下载
+</div>
+
+<script>
+    let quill;
+
+    function editFile() {
+        document.getElementById('view-mode').style.display = 'none';
+        document.getElementById('edit-mode').style.display = 'block';
+
+        if (!quill) {
+            quill = new Quill('#editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote', 'code-block'],
+                        [{ 'header': 1 }, { 'header': 2 }],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        [{ 'size': ['small', false, 'large', 'huge'] }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'align': [] }],
+                        ['clean'],
+                        ['link', 'image']
+                    ]
+                }
+            });
+        }
+
+        const content = document.getElementById('contentDisplay').innerHTML;
+        quill.clipboard.dangerouslyPasteHTML(content);
+    }
+
+    function downloadFile() {
+        window.location.href = '/download?filename={{ filename }}';
+    }
+
+    function cancelEdit() {
+        document.getElementById('view-mode').style.display = 'block';
+        document.getElementById('edit-mode').style.display = 'none';
+    }
+
+    function saveFile() {
+        const content = quill.root.innerHTML;
+        const filename = '{{ filename }}';
+
+        fetch('/save_md', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `filename=${filename}&content=${encodeURIComponent(content)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                alert('保存成功！');
+                document.getElementById('contentDisplay').innerHTML = content;
+                cancelEdit();
+            } else {
+                alert('保存失败：' + data.message);
+            }
+        });
+    }
+
+    function renameFile() {
+        const newFilename = prompt('请输入新的文件名：', '{{ filename }}');
+        if (newFilename && newFilename !== '{{ filename }}') {
+            fetch('/rename_file', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `old_filename={{ filename }}&new_filename=${encodeURIComponent(newFilename)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = `/show_md?filename=${newFilename}`;
+                }
+            });
+        }
+    }
+
+    function deleteFile() {
+        if (confirm('确定要删除吗？此操作不可撤销。')) {
+            fetch('/delete_file', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `filename={{ filename }}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    window.location.href = '/';
+                }
+            });
+        }
+    }
+
+    const dragDropArea = document.getElementById('dragDropArea');
+    dragDropArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dragDropArea.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+    });
+    dragDropArea.addEventListener('dragleave', () => {
+        dragDropArea.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+    });
+    dragDropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        window.location.href = `/download?filename={{ filename }}`;
+    });
+
+    window.addEventListener('scroll', function() {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) navbar.classList.add('scrolled');
+        else navbar.classList.remove('scrolled');
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const h1 = document.querySelector('.document-header h1');
+        const content = document.querySelector('.document-content');
+        const area = document.getElementById('dragDropArea');
+        if (h1) setTimeout(() => h1.style.opacity = '1', 100);
+        if (content) setTimeout(() => content.style.opacity = '1', 300);
+        if (area) setTimeout(() => area.style.opacity = '1', 500);
+    });
+</script>
+</body>
+</html>

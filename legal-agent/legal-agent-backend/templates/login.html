@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+    <title>智审云枢 | 客户端</title>
+    <style>
+        :root {
+            --primary-blue: #3b82f6;
+            --light-blue: #dbeafe;
+            --text-main: #1e293b;
+            --text-gray: #64748b;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: "PingFang SC", "Microsoft YaHei", sans-serif; }
+
+        body {
+            height: 100vh; width: 100vw; display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 50%, #dbeafe 100%);
+            background-size: 400% 400%; animation: gradientMove 15s ease infinite;
+            overflow: hidden; perspective: 1200px;
+        }
+
+        @keyframes gradientMove { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+
+        .bg-blob { position: absolute; width: 550px; height: 550px; background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%); filter: blur(80px); z-index: -1; }
+        .blob-1 { top: -10%; left: -10%; animation: blobMove1 20s infinite alternate ease-in-out; }
+        .blob-2 { bottom: -10%; right: -10%; animation: blobMove2 25s infinite alternate ease-in-out; }
+        @keyframes blobMove1 { 0% { transform: translate(0, 0) scale(1); } 100% { transform: translate(200px, 150px) scale(1.4); } }
+        @keyframes blobMove2 { 0% { transform: translate(0, 0) scale(1.2); } 100% { transform: translate(-150px, -200px) scale(0.9); } }
+
+        .main-container {
+            position: relative; width: 1150px; height: 750px; background: rgba(255, 255, 255, 0.45);
+            backdrop-filter: blur(25px); border: 1px solid rgba(255, 255, 255, 0.7); border-radius: 40px;
+            display: flex; box-shadow: 0 40px 100px rgba(59, 130, 246, 0.12); overflow: hidden;
+            transition: all 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .main-container.signup-mode .visual-panel { transform: translateX(100%); }
+        .main-container.signup-mode .form-panel { transform: translateX(-100%); }
+
+        .visual-panel { flex: 1.1; padding: 50px; display: flex; flex-direction: column; justify-content: space-between; transition: 0.8s; z-index: 2; position: relative; }
+        .logo { display: flex; align-items: center; gap: 12px; color: var(--primary-blue); }
+        .logo i { font-size: 2.2rem; background: #fff; padding: 8px; border-radius: 14px; box-shadow: 0 8px 20px rgba(59, 130, 246, 0.15); }
+        .logo span { font-size: 1.6rem; font-weight: 800; }
+
+        .cards-stack { position: relative; height: 350px; display: flex; align-items: center; justify-content: center; }
+        .ai-card { width: 380px; background: rgba(255, 255, 255, 0.95); border-radius: 30px; padding: 30px; box-shadow: 0 20px 40px rgba(0,0,0,0.05); animation: cardFloat 4s ease-in-out infinite; }
+        @keyframes cardFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+        .sub-card-security { position: absolute; width: 180px; background: var(--primary-blue); color: white; border-radius: 20px; padding: 15px; top: 20px; right: -10px; z-index: 6; transform: rotate(5deg); }
+        .task-item { background: #f8fafc; padding: 12px 15px; border-radius: 15px; margin-bottom: 10px; position: relative; }
+        .tag { padding: 3px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 600; }
+        .tag.done { background: #dcfce7; color: #16a34a; }
+        .tag.doing { background: #dbeafe; color: #2563eb; }
+
+        .bottom-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .feature-item-small { background: rgba(255, 255, 255, 0.6); border-radius: 24px; padding: 20px 10px; text-align: center; }
+        .feature-icon-box { width: 42px; height: 42px; margin: 0 auto 12px; border-radius: 12px; display: flex; justify-content: center; align-items: center; }
+        .icon-blue-1 { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+
+        .form-panel { flex: 1; background: rgba(255, 255, 255, 0.85); padding: 60px 80px; display: flex; flex-direction: column; justify-content: center; z-index: 3; }
+        .form-content h2 { font-size: 2.2rem; color: var(--text-main); margin-bottom: 10px; font-weight: 800; }
+        .subtitle { color: var(--text-gray); margin-bottom: 35px; font-size: 0.95rem; }
+
+        .input-box { display: flex; align-items: center; background: #fff; border: 2px solid #f1f5f9; border-radius: 16px; padding: 0 16px; margin-bottom: 15px; transition: 0.3s; }
+        .input-box:focus-within { border-color: var(--primary-blue); transform: scale(1.02); }
+        .input-box input { border: none; background: transparent; padding: 16px 0; width: 100%; outline: none; font-size: 1rem; }
+        .input-box i { color: #94a3b8; margin-right: 12px; }
+
+        .btn-submit {
+            width: 100%; padding: 16px; background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #fff; border: none; border-radius: 16px; font-size: 1.1rem; font-weight: 700; cursor: pointer; transition: 0.4s;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+        .btn-submit:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3); }
+        .btn-submit:disabled { background: #94a3b8; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .admin-section { margin-top: 35px; padding-top: 25px; border-top: 1px dashed #cbd5e1; text-align: center; }
+        .btn-admin {
+            width: 100%; padding: 12px; background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
+            color: var(--text-gray); cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .btn-admin:hover { background: #334155; color: white; border-color: #334155; }
+
+        .switch-tip { margin-top: 25px; text-align: center; color: var(--text-gray); font-size: 0.9rem; }
+        .switch-tip span { color: var(--primary-blue); cursor: pointer; font-weight: 700; text-decoration: underline; }
+
+        .hidden { display: none; }
+        .fade-in { animation: fadeIn 0.6s forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 转圈圈动画 */
+        .loader { width: 18px; height: 18px; border: 2px solid #ffffff66; border-top-color: white; border-radius: 50%; animation: spin 0.8s linear infinite; display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+
+    <div class="main-container" id="mainContainer">
+        <div class="visual-panel">
+            <div class="logo"><i class="fas fa-balance-scale"></i><span>智审云枢</span></div>
+            <div class="cards-stack">
+                <div class="sub-card-security">
+                    <div style="font-size: 0.75rem; opacity: 0.8;">司法级加密</div>
+                    <div style="font-weight: 700;">安全审计已开启</div>
+                </div>
+                <div class="ai-card">
+                    <h4 style="margin-bottom:15px;"><i class="fas fa-robot"></i> AI 任务监控</h4>
+                    <div class="task-item"><div class="tag done">已完成</div> 智能合同审查</div>
+                    <div class="task-item"><div class="tag doing">处理中</div> 类案智能检索</div>
+                </div>
+            </div>
+            <div class="bottom-features">
+                <div class="feature-item-small"><div class="feature-icon-box icon-blue-1"><i class="fas fa-bolt"></i></div><h5>秒级响应</h5></div>
+                <div class="feature-item-small"><div class="feature-icon-box icon-blue-1"><i class="fas fa-shield-alt"></i></div><h5>隐私保护</h5></div>
+                <div class="feature-item-small"><div class="feature-icon-box icon-blue-1"><i class="fas fa-sync-alt"></i></div><h5>实时更新</h5></div>
+            </div>
+        </div>
+
+        <div class="form-panel">
+            <div class="form-content fade-in" id="loginBox">
+                <h2>欢迎登录</h2>
+                <p class="subtitle">智审云枢助力您的合同审查工作</p>
+                <form id="loginForm">
+                    <div class="input-box"><i class="far fa-user"></i><input type="text" id="login_user" placeholder="用户名" required></div>
+                    <div class="input-box"><i class="fas fa-lock"></i><input type="password" id="login_pass" placeholder="请输入密码" required></div>
+                    <button type="submit" class="btn-submit" id="loginBtn">
+                        <div class="loader" id="loginLoader"></div>
+                        <span id="loginText">登 录</span>
+                    </button>
+                </form>
+
+                <div class="admin-section">
+                    <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 12px;">系统管理入口</p>
+                    <button class="btn-admin" onclick="location.href='http://127.0.0.1:5011'">
+                        <i class="fas fa-user-shield"></i>
+                        <span>进入管理员后台</span>
+                    </button>
+                </div>
+                <p class="switch-tip">还没有账号？ <span onclick="switchForm('signup')">免费注册</span></p>
+            </div>
+
+            <div class="form-content hidden" id="signupBox">
+                <h2>创建账号</h2>
+                <p class="subtitle">开启智能办公</p>
+                <form id="registerForm">
+                    <div class="input-box"><i class="far fa-user"></i><input type="text" id="reg_user" placeholder="用户名" required></div>
+                    <div class="input-box"><i class="far fa-envelope"></i><input type="email" id="reg_email" placeholder="邮箱" required></div>
+                    <div class="input-box"><i class="fas fa-lock"></i><input type="password" id="reg_pass" placeholder="设置密码" required></div>
+                    <button type="submit" class="btn-submit" id="regBtn">
+                        <div class="loader" id="regLoader"></div>
+                        <span id="regText">注 册</span>
+                    </button>
+                </form>
+                <p class="switch-tip"><span onclick="switchForm('login')">返回登录</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchForm(type) {
+            const container = document.getElementById('mainContainer');
+            if (type === 'signup') container.classList.add('signup-mode');
+            else container.classList.remove('signup-mode');
+
+            $('.form-content').addClass('hidden').removeClass('fade-in');
+            $('#' + type + 'Box').removeClass('hidden').addClass('fade-in');
+        }
+
+        $(document).ready(function() {
+            // 登录处理
+            $('#loginForm').on('submit', function(e) {
+                e.preventDefault();
+                const $btn = $('#loginBtn');
+                const $loader = $('#loginLoader');
+                const $text = $('#loginText');
+
+                $btn.prop('disabled', true);
+                $loader.show();
+                $text.text('正在验证安全环境...');
+
+                const userData = {
+                    username: $('#login_user').val(),
+                    password: $('#login_pass').val()
+                };
+
+                $.ajax({
+                    url: '/login',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(userData),
+                    success: function(res) {
+                        if (res.success) {
+                            window.location.href = 'http://127.0.0.1:8000';
+                        } else {
+                            alert(res.message);
+                            resetLogin();
+                        }
+                    },
+                    error: function() {
+                        alert('网络错误，请检查后端运行状态');
+                        resetLogin();
+                    }
+                });
+
+                function resetLogin() {
+                    $btn.prop('disabled', false);
+                    $loader.hide();
+                    $text.text('登 录');
+                }
+            });
+
+            // 注册处理
+            $('#registerForm').on('submit', function(e) {
+                e.preventDefault();
+                const $btn = $('#regBtn');
+                const $loader = $('#regLoader');
+                const $text = $('#regText');
+
+                $btn.prop('disabled', true);
+                $loader.show();
+                $text.text('正在创建账号...');
+
+                const regData = {
+                    username: $('#reg_user').val(),
+                    email: $('#reg_email').val(),
+                    password: $('#reg_pass').val()
+                };
+
+                $.ajax({
+                    url: '/register',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(regData),
+                    success: function(res) {
+                        alert(res.message);
+                        if (res.success) switchForm('login');
+                        resetReg();
+                    },
+                    error: function() {
+                        alert('注册失败，请稍后再试');
+                        resetReg();
+                    }
+                });
+
+                function resetReg() {
+                    $btn.prop('disabled', false);
+                    $loader.hide();
+                    $text.text('注 册');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

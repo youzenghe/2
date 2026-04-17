@@ -1,0 +1,58 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智审云枢 | 模板管理</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root { --blue:#2563eb; --navy:#1e3e7e; --bg:#f0f4fa; --card:rgba(255,255,255,.9); --border:#dbe5f1; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:"Inter","PingFang SC",sans-serif; background:linear-gradient(135deg,#a1c4fd,#7699eb); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+    .shell { width:100%; max-width:860px; }
+    .card { background:var(--card); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,.5); border-radius:36px; padding:54px 48px; position:relative; box-shadow:0 40px 100px rgba(0,0,0,.1); }
+    .card::before,.card::after { content:""; position:absolute; width:40px; height:40px; }
+    .card::before { top:34px; left:34px; border-top:2px solid #a8b8d8; border-left:2px solid #a8b8d8; }
+    .card::after { right:34px; bottom:34px; border-right:2px solid #a8b8d8; border-bottom:2px solid #a8b8d8; opacity:.6; }
+    .top-actions { position:absolute; top:28px; right:28px; display:flex; gap:12px; }
+    .action-btn { width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; text-decoration:none; border:1px solid rgba(37,99,235,.12); background:#fff; color:var(--blue); transition:.25s; }
+    .action-btn:hover { background:var(--blue); color:#fff; transform:translateY(-2px) scale(1.05); }
+    h1 { text-align:center; font-size:3rem; color:var(--blue); letter-spacing:10px; margin-bottom:12px; }
+    .status { text-align:center; color:var(--navy); opacity:.75; margin-bottom:44px; letter-spacing:2px; font-size:.86rem; }
+    .grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+    .item { display:flex; align-items:center; gap:20px; text-decoration:none; background:rgba(255,255,255,.65); border:1px solid rgba(255,255,255,.6); border-radius:18px; padding:28px 30px; transition:.25s; }
+    .item:hover { background:#fff; transform:translateY(-5px); box-shadow:0 16px 30px rgba(37,99,235,.14); }
+    .item i { font-size:2rem; color:var(--blue); width:42px; text-align:center; }
+    .item h3 { color:var(--blue); font-size:1.35rem; margin-bottom:4px; }
+    .item p { color:var(--navy); opacity:.65; text-transform:uppercase; letter-spacing:1px; font-size:.8rem; }
+    .footer { text-align:center; margin-top:42px; color:var(--navy); opacity:.6; letter-spacing:4px; font-size:.78rem; }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="card">
+      <div class="top-actions">
+        <a href="http://127.0.0.1:8003/" class="action-btn" title="返回管理中枢"><i class="bi bi-house-door"></i></a>
+        <button class="action-btn" onclick="confirmExit()" title="安全退出"><i class="fas fa-power-off"></i></button>
+      </div>
+      <h1>模板管理</h1>
+      <div class="status">SYSTEM OPERATIONAL | SECURE ACCESS TERMINAL</div>
+      <div class="grid">
+        <a href="http://127.0.0.1:5027" class="item"><i class="fas fa-file-signature"></i><div><h3>合同模板管理</h3><p>Contract Templates</p></div></a>
+        <a href="http://127.0.0.1:5032" class="item"><i class="fas fa-comments"></i><div><h3>合同模板反馈</h3><p>Contract Feedback</p></div></a>
+        <a href="http://127.0.0.1:5026" class="item"><i class="fas fa-gavel"></i><div><h3>诉讼模板管理</h3><p>Litigation Templates</p></div></a>
+        <a href="http://127.0.0.1:5033" class="item"><i class="fas fa-comment-dots"></i><div><h3>诉讼模板反馈</h3><p>Litigation Feedback</p></div></a>
+      </div>
+      <div class="footer">2026 COMMAND INTERFACE</div>
+    </div>
+  </div>
+  <script>
+    function confirmExit() {
+      if (confirm('是否退出系统？')) {
+        window.location.href = 'http://127.0.0.1:5011/';
+      }
+    }
+  </script>
+</body>
+</html>

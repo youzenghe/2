@@ -1,0 +1,221 @@
+/* 全局样式 */
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f9f6f1;
+    background-image: linear-gradient(45deg, #f9f6f1 25%, #f5f3ee 25%, #f5f3ee 50%, #f9f6f1 50%, #f9f6f1 75%, #f5f3ee 75%, #f5f3ee);
+    background-size: 40px 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: #5d4e52;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.5);
+}
+
+/* 聊天容器 */
+.chat-container {
+    max-width: 700px;
+    width: 95%;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #eae4e1;
+}
+
+/* 聊天头部 */
+.chat-header {
+    background: #f8f5f2;
+    color: #5d4e52;
+    padding: 20px;
+    text-align: center;
+    font-size: 24px;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.2);
+}
+
+/* 消息显示区域 */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    scroll-behavior: smooth;
+    background-color: #ffffff;
+}
+
+/* 单个消息样式 */
+.chat-message {
+    margin: 8px 0;
+    padding: 12px 16px;
+    border-radius: 20px;
+    max-width: 80%;
+    word-wrap: break-word;
+    animation: fadeInUp 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    border: 1px solid #eae4e1;
+    background-color: #f9f6f1;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 用户消息样式 */
+.user-message {
+    background-color: #f5f3ee;
+    color: #5d4e52;
+    align-self: flex-end;
+    text-align: right;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+/* AI 消息样式 */
+.ai-message {
+    background-color: #f8f5f2;
+    color: #5d4e52;
+    align-self: flex-start;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+/* 输入容器 */
+.input-container {
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #eae4e1;
+    background-color: #ffffff;
+}
+
+/* 输入框 */
+input[type="text"] {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #eae4e1;
+    border-radius: 25px;
+    outline: none;
+    transition: border-color 0.3s ease;
+    margin-right: 15px;
+    font-size: 14px;
+    background-color: #f9f6f1;
+    color: #5d4e52;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+input[type="text"]:focus {
+    border-color: #dad2c9;
+    box-shadow: 0 0 5px rgba(218, 210, 201, 0.3);
+}
+
+/* 按钮通用样式 */
+button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    font-size: 14px;
+    color: #5d4e52;
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.2);
+    background-color: #f5f3ee;
+}
+
+button:hover {
+    background-color: #f0ece5;
+    transform: scale(1.03);
+}
+
+button:disabled {
+    background: #f8f5f2;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* 发送按钮 */
+.send-button {
+    background-color: #f5f3ee;
+}
+
+/* 语音按钮 */
+.voice-button {
+    background-color: #f5f3ee;
+    margin-left: 10px;
+}
+
+/* 清空聊天记录按钮 */
+.clear-button {
+    background-color: #f5f3ee;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+}
+
+/* 加载动画 */
+.loading {
+    display: none;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #f5f3ee;
+    border-radius: 50%;
+    width: 25px;
+    height: 25px;
+    animation: spin 1s linear infinite;
+    margin-left: 15px;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* 滚动条样式 */
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: #ffffff;
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: #eae4e1;
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: #dad2c9;
+}
+
+/* 响应式设计 */
+@media (max-width: 600px) {
+    .chat-container {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .chat-header {
+        border-radius: 0;
+    }
+
+}

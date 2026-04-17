@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE project [
+        <!ELEMENT project (modelVersion|groupId|artifactId|version|name|packaging|properties|dependencies|repositories|pluginRepositories|build)*>
+        <!ATTLIST project
+                xmlns CDATA #REQUIRED
+                xmlns:xsi CDATA #REQUIRED
+                xsi:schemaLocation CDATA #REQUIRED>
+        <!ELEMENT modelVersion (#PCDATA)>
+        <!ELEMENT groupId (#PCDATA)>
+        <!ELEMENT artifactId (#PCDATA)>
+        <!ELEMENT version (#PCDATA)>
+        <!ELEMENT name (#PCDATA)>
+        <!ELEMENT packaging (#PCDATA)>
+        <!ELEMENT properties (project.build.sourceEncoding|maven.compiler.target|maven.compiler.source|junit.version|scala.version|spark.version)*>
+        <!ELEMENT project.build.sourceEncoding (#PCDATA)>
+        <!ELEMENT maven.compiler.target (#PCDATA)>
+        <!ELEMENT maven.compiler.source (#PCDATA)>
+        <!ELEMENT junit.version (#PCDATA)>
+        <!ELEMENT scala.version (#PCDATA)>
+        <!ELEMENT spark.version (#PCDATA)>
+        <!ELEMENT dependencies (dependency)*>
+        <!ELEMENT dependency (groupId|artifactId|version|scope)*>
+        <!ELEMENT scope (#PCDATA)>
+        <!ELEMENT repositories (repository)*>
+        <!ELEMENT repository (id|url|releases|snapshots)*>
+        <!ELEMENT id (#PCDATA)>
+        <!ELEMENT url (#PCDATA)>
+        <!ELEMENT releases (enabled)*>
+        <!ELEMENT enabled (#PCDATA)>
+        <!ELEMENT snapshots (enabled)*>
+        <!ELEMENT pluginRepositories (pluginRepository)*>
+        <!ELEMENT pluginRepository (id|url|releases|snapshots)*>
+        <!ELEMENT build (plugins)*>
+        <!ELEMENT plugins (plugin)*>
+        <!ELEMENT plugin (groupId|artifactId|version)*>
+        ]>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.example</groupId>
+    <artifactId>ScalaStudy</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <name>ScalaStudy</name>
+    <packaging>war</packaging>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <junit.version>5.10.2</junit.version>
+        <scala.version>2.13.0</scala.version>
+        <spark.version>3.2.1</spark.version>
+    </properties>
+
+
+    <dependencies>
+        <dependency>
+            <groupId>javax</groupId>
+            <artifactId>javaee-api</artifactId>
+            <version>8.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <version>${junit.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- 导入kafka的依赖 -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>2.5.0</version>
+        </dependency>
+        <!-- 导入spark的依赖 -->
+
+
+
+        <!-- 导入spark-streaming的依赖 -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming_2.13</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-core_2.13</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+
+        <!-- 导入sparkstreaming-kafka依赖       -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming-kafka-0-10_2.13</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+
+        <!-- 导入spark-sql的依赖 -->
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-sql_2.13</artifactId>
+            <version>${spark.version}</version>
+        </dependency>
+
+
+        <!-- 导入mysql的连接驱动依赖-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>8.0.28</version>
+        </dependency>
+    </dependencies>
+    <!-- 通过pom文件，指定下载地址   -->
+    <!-- 通过pom文件，指定下载地址   -->
+    <repositories>
+
+        <repository>
+            <id>aliyun</id>
+            <url>https://maven.aliyun.com/repository/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+
+
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>aliyun-plugin</id>
+            <url>https://maven.aliyun.com/repository/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.3.2</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智审云枢 | 智能案例分析工作台</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        /*================= 科技蓝专业版配色 ================= */
+        :root {
+            --accent-blue: #2563EB;    /* 品牌主色：亮蓝色 */
+            --deep-navy: #1E3E7E;      /* 深海军蓝：用于侧边栏及强调色 */
+            --bg-body: #F4F7FA;        /* 主背景色：浅蓝灰 */
+            --bg-card: #FFFFFF;        /* 卡片背景：纯白 */
+            --border: #E2E8F0;         /* 边框颜色 */
+            --text-main: #334155;      /* 主要文字：深灰蓝 */
+            --text-sub: #94A3B8;       /* 次要文字：浅灰 */
+
+            /* 衍生色 */
+            --sidebar-bg: var(--deep-navy);
+            --sidebar-hover: #2A4B8F;
+            --accent-hover: #1d4ed8;
+            --accent-light: rgba(37, 99, 235, 0.08); /* 极浅蓝背景 */
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg-body); color: var(--text-main); height: 100vh; overflow: hidden; }
+        .app-container { display: flex; height: 100vh; }
+
+        /* 左侧边栏 */
+        .sidebar { width: 260px; background: var(--sidebar-bg); color: #ecf0f1; display: flex; flex-direction: column; padding: 20px; box-shadow: 2px 0 10px rgba(0,0,0,0.05); z-index: 10; }
+        .sidebar-header h2 { font-size: 1.2rem; font-weight: 500; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: #fff; }
+        .sidebar-header h2 i { color: #8cb4e2; }
+
+        .new-chat-btn { background: var(--accent-blue); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; width: 100%; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); }
+        .new-chat-btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+        .history-list { margin-top: 20px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }
+        .history-title { font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px; padding-left: 5px; letter-spacing: 1px; }
+        .history-item { padding: 10px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; color: #bdc3c7; display: flex; align-items: center; gap: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: 0.2s; }
+        .history-item:hover { background: var(--sidebar-hover); color: white; }
+
+        .sidebar-footer { margin-top: auto; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .back-link { color: #bdc3c7; text-decoration: none; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 8px; background: rgba(0,0,0,0.15); padding: 10px; border-radius: 8px; transition: 0.2s; }
+        .back-link:hover { color: white; background: rgba(0,0,0,0.25); }
+
+        /* 主工作区 */
+        .main-area { flex: 1; display: flex; flex-direction: column; background: var(--bg-body); position: relative; }
+        .top-nav { height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 30px; background: rgba(255,255,255,0.8); backdrop-filter: blur(10px); z-index: 5; }
+        .top-nav h3 { font-size: 1rem; font-weight: 500; color: var(--text-main); }
+
+        .chat-container { flex: 1; overflow-y: auto; padding: 40px 20px 120px; display: flex; flex-direction: column; align-items: center; scroll-behavior: smooth; }
+        .message-wrapper { width: 100%; max-width: 800px; margin-bottom: 25px; display: flex; flex-direction: column; }
+        .user-wrapper { align-items: flex-end; }
+        .ai-wrapper { align-items: flex-start; }
+
+        .message-bubble { padding: 16px 22px; border-radius: 12px; font-size: 0.95rem; line-height: 1.7; position: relative; box-shadow: 0 2px 8px rgba(0,0,0,0.02); }
+        .user-bubble { background: var(--accent-blue); color: white; border-bottom-right-radius: 2px; max-width: 80%; }
+        .ai-bubble { background: var(--bg-card); color: var(--text-main); max-width: 100%; width: 100%; border: 1px solid #edf2f7; }
+
+        /* AI Markdown 样式 */
+        .ai-bubble h1, .ai-bubble h2, .ai-bubble h3 { margin: 15px 0 10px; color: var(--text-main); font-size: 1.05rem; }
+        .ai-bubble p { margin-bottom: 12px; }
+        .ai-bubble strong { color: var(--deep-navy); font-weight: 600; background: var(--accent-light); padding: 2px 6px; border-radius: 4px; }
+        .copy-btn { position: absolute; top: 10px; right: 10px; background: var(--bg-body); border: none; color: var(--text-sub); cursor: pointer; padding: 6px 12px; border-radius: 6px; opacity: 0; transition: 0.2s; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; }
+        .ai-wrapper:hover .copy-btn { opacity: 1; }
+        .copy-btn:hover { background: #e2e8f0; color: var(--text-main); }
+
+        /* 呼吸灯骨架屏 */
+        .skeleton-loader { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 600px; padding: 5px 0; }
+        .skeleton-line { height: 16px; border-radius: 4px; background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%); background-size: 200% 100%; animation: loading-shimmer 1.5s infinite linear; }
+        .skeleton-line:nth-child(1) { width: 30%; height: 20px; margin-bottom: 10px; }
+        .skeleton-line:nth-child(2) { width: 100%; }
+        .skeleton-line:nth-child(3) { width: 90%; }
+        .skeleton-line:nth-child(4) { width: 70%; }
+        @keyframes loading-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* 欢迎页 & 快捷按钮矩阵 */
+        .welcome-screen { text-align: center; margin-top: 5vh; width: 100%; max-width: 760px; }
+        .welcome-icon-wrapper { width: 80px; height: 80px; background: var(--accent-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+        .welcome-icon-wrapper i { font-size: 2.5rem; color: var(--accent-blue); }
+
+        .welcome-screen h2 { margin-bottom: 10px; color: var(--text-main); font-weight: 500; letter-spacing: 1px; }
+        .welcome-screen p { color: var(--text-sub); margin-bottom: 40px; font-size: 0.95rem; }
+
+        .prompt-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; text-align: left; }
+        .prompt-card { background: var(--bg-card); border: 1px solid var(--border); padding: 18px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.01); }
+        .prompt-card:hover { border-color: var(--accent-blue); box-shadow: 0 8px 20px rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
+
+        .prompt-card h4 { color: var(--text-main); margin-bottom: 8px; font-size: 0.95rem; display: flex; align-items: center; gap: 10px; font-weight: 500; }
+        .prompt-card-icon { background: var(--accent-light); color: var(--accent-blue); width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+
+        .prompt-card p { font-size: 0.85rem; color: var(--text-sub); margin: 0; line-height: 1.5; }
+
+        /* 输入区 */
+        .input-wrapper { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(180deg, transparent, var(--bg-body) 25%); padding: 30px 0 15px; display: flex; flex-direction: column; align-items: center; }
+        .input-box { width: 100%; max-width: 800px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; display: flex; align-items: flex-end; padding: 10px 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.04); transition: border-color 0.3s; }
+        .input-box:focus-within { border-color: var(--accent-blue); }
+        #user-input { flex: 1; border: none; resize: none; outline: none; padding: 10px; max-height: 150px; font-family: inherit; font-size: 0.95rem; line-height: 1.5; background: transparent; }
+        #user-input::placeholder { color: #94a3b8; }
+        .action-buttons { display: flex; gap: 10px; padding-bottom: 5px; }
+        .action-buttons button { width: 40px; height: 40px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+        .btn-send { background: var(--accent-blue); color: white; }
+        .btn-send:hover { background: var(--accent-hover); }
+        .footer-tip { font-size: 0.75rem; color: #94a3b8; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2><i class="fas fa-balance-scale"></i> 法务助手</h2>
+            </div>
+            <button class="new-chat-btn" onclick="startNewChat()"><i class="fas fa-plus"></i> 新的分析</button>
+            <div class="history-list" id="history-container">
+                <p class="history-title">最近提问</p>
+                </div>
+            <div class="sidebar-footer">
+                <a href="http://127.0.0.1:5020/result" class="back-link"><i class="fas fa-sign-out-alt"></i> 返回主系统</a>
+            </div>
+        </aside>
+
+        <main class="main-area">
+            <header class="top-nav">
+                <h3>当前分析：智能案例问答</h3>
+            </header>
+
+            <div class="chat-container" id="chat-messages">
+                <div class="welcome-screen" id="welcome-screen">
+                    <div class="welcome-icon-wrapper">
+                        <i class="fas fa-balance-scale"></i>
+                    </div>
+                    <h2>智能案例分析台</h2>
+                    <p>选择一个典型场景，或在下方直接输入案情描述</p>
+                    <div class="prompt-grid">
+                        <div class="prompt-card" onclick="usePrompt('张三在下班路上发生交通事故受伤，请问能否认定为工伤？')">
+                            <h4><div class="prompt-card-icon"><i class="fas fa-hard-hat"></i></div> 劳动工伤</h4>
+                            <p>下班途中交通事故工伤认定</p>
+                        </div>
+                        <div class="prompt-card" onclick="usePrompt('借条上只写了借钱，没写什么时候还，现在过了3年还能要回来吗？')">
+                            <h4><div class="prompt-card-icon"><i class="fas fa-money-bill-wave"></i></div> 民间借贷</h4>
+                            <p>未约定还款时间的诉讼时效</p>
+                        </div>
+                        <div class="prompt-card" onclick="usePrompt('遇到歹徒持刀抢劫，反抗时导致歹徒重伤，这算正当防卫还是防卫过当？')">
+                            <h4><div class="prompt-card-icon"><i class="fas fa-shield-alt"></i></div> 刑事防卫</h4>
+                            <p>正当防卫与防卫过当的界限</p>
+                        </div>
+                        <div class="prompt-card" onclick="usePrompt('租客提前退租，房东以违约为由拒绝退还押金，这合理吗？')">
+                            <h4><div class="prompt-card-icon"><i class="fas fa-home"></i></div> 房屋租赁</h4>
+                            <p>提前退租押金退还纠纷</p>
+                        </div>
+                        <div class="prompt-card" onclick="usePrompt('网购商品拆封后，商家拒绝七天无理由退货，消费者该如何维权？')">
+                            <h4><div class="prompt-card-icon"><i class="fas fa-shopping-cart"></i></div> 消费者权益</h4>
+                            <p>网购拆封不退货维权分析</p>
+                        </div>
+                        <div class="prompt-card" onclick="usePrompt('员工入职未签劳动合同，半年后被辞退，可以申请双倍工资赔偿吗？')">
+                            <h4><div class="prompt-card-icon"><i class="fas fa-briefcase"></i></div> 劳动合同</h4>
+                            <p>未签劳动合同的双倍工资赔偿</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-wrapper">
+                <div class="input-box">
+                    <textarea id="user-input" placeholder="详细描述案情 (Shift + Enter 换行)..." rows="1" oninput="autoResize(this)" onkeydown="handleEnter(event)"></textarea>
+                    <div class="action-buttons">
+                        <button class="btn-send" id="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+                <div class="footer-tip">AI 案例解析基于大语言模型，仅供参考，不构成专业法律意见。</div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        marked.setOptions({ breaks: true, gfm: true });
+
+        const chatContainer = document.getElementById('chat-messages');
+        const userInput = document.getElementById('user-input');
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const historyContainer = document.getElementById('history-container');
+
+        window.onload = loadHistory;
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight < 150 ? textarea.scrollHeight : 150) + 'px';
+        }
+
+        function usePrompt(text) {
+            userInput.value = text;
+            autoResize(userInput);
+            userInput.focus();
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            if (welcomeScreen.style.display !== 'none') welcomeScreen.style.display = 'none';
+
+            appendUserMessage(text);
+            saveToHistory(text);
+
+            userInput.value = '';
+            userInput.style.height = 'auto';
+
+            const loadingBubbleId = appendSkeletonLoading();
+            scrollToBottom();
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ question: text })
+                });
+
+                if (!response.ok) throw new Error("网络错误");
+                const data = await response.json();
+
+                replaceSkeletonWithMessage(loadingBubbleId, data.answer || data.error);
+
+            } catch (error) {
+                replaceSkeletonWithMessage(loadingBubbleId, "⚠️ 抱歉，连接服务器失败。请检查后端状态。");
+            }
+        }
+
+        function appendUserMessage(text) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `message-wrapper user-wrapper`;
+            wrapper.innerHTML = `<div class="message-bubble user-bubble">${text}</div>`;
+            chatContainer.appendChild(wrapper);
+        }
+
+        function appendSkeletonLoading() {
+            const id = 'loading-' + Date.now();
+            const wrapper = document.createElement('div');
+            wrapper.className = `message-wrapper ai-wrapper`;
+            wrapper.id = id;
+            wrapper.innerHTML = `
+                <div class="message-bubble ai-bubble">
+                    <div class="skeleton-loader">
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line"></div>
+                        <div class="skeleton-line"></div>
+                    </div>
+                </div>
+            `;
+            chatContainer.appendChild(wrapper);
+            return id;
+        }
+
+        function replaceSkeletonWithMessage(id, markdownText) {
+            const wrapper = document.getElementById(id);
+            if (!wrapper) return;
+
+            const htmlContent = marked.parse(markdownText);
+
+            wrapper.innerHTML = `
+                <div class="message-bubble ai-bubble">
+                    <button class="copy-btn" onclick="copyText(this)"><i class="far fa-copy"></i> 复制</button>
+                    <div class="content">${htmlContent}</div>
+                </div>
+            `;
+            scrollToBottom();
+        }
+
+        function saveToHistory(text) {
+            let history = JSON.parse(localStorage.getItem('kimiHistory') || '[]');
+            const title = text.length > 15 ? text.substring(0, 15) + '...' : text;
+            history.unshift(title);
+            if (history.length > 10) history.pop();
+            localStorage.setItem('kimiHistory', JSON.stringify(history));
+            renderHistory();
+        }
+
+        function loadHistory() { renderHistory(); }
+
+        function renderHistory() {
+            let history = JSON.parse(localStorage.getItem('kimiHistory') || '[]');
+            historyContainer.innerHTML = '<p class="history-title">最近提问</p>';
+
+            history.forEach(title => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `<i class="far fa-comment-dots"></i> ${title}`;
+                div.onclick = () => usePrompt(title);
+                historyContainer.appendChild(div);
+            });
+        }
+
+        function copyText(btn) {
+            const textDiv = btn.nextElementSibling;
+            navigator.clipboard.writeText(textDiv.innerText).then(() => {
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> 成功';
+                setTimeout(() => btn.innerHTML = originalHtml, 2000);
+            });
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function startNewChat() {
+            const wrappers = chatContainer.querySelectorAll('.message-wrapper');
+            wrappers.forEach(w => w.remove());
+            welcomeScreen.style.display = 'block';
+            userInput.value = '';
+            userInput.style.height = 'auto';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智审云枢 | 法律合同管理</title>
+    <!-- 引用 Font Awesome 用于图标显示 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/styles/github.min.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <style>
+        /* ===== 定义从第一个页面引入的商务蓝色系变量 ===== */
+        :root {
+            --accent-blue: #2563EB;
+            --deep-navy: #1E3E7E;    /* 商务深蓝 */
+            --bg-body: #F4F7FA;
+            --bg-card: #FFFFFF;
+            --border: #E2E8F0;
+            --text-main: #334155;
+            --text-sub: #94A3B8;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #343a40;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-body); /* 改为清爽的灰蓝背景色 */
+            min-height: 100vh;
+        }
+
+        /* ===== 修改：顶部导航栏底色改为深蓝色 ===== */
+        .navbar {
+            background-color: var(--deep-navy); /* 底色换成商务深蓝 */
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            padding: 15px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: fixed;
+            top: 0;
+            width: 90%;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(8px);
+        }
+
+        .navbar.scrolled {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 顶部文字和 Logo 颜色改为白色 */
+        .logo {
+            font-size: 20px;
+            font-weight: 600;
+            color: #FFFFFF;
+            text-decoration: none;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        /* 修改：改用 Font Awesome 图标样式 */
+        .logo::before {
+            content: "\f24e";
+            font-family: "Font Awesome 6 Free";
+            font-weight: 900;
+            margin-right: 15px;
+            font-size: 28px;
+            color: #FFFFFF;
+            display: inline-block;
+            transition: transform 0.3s;
+        }
+
+        .logo:hover::before {
+            transform: rotate(-10deg);
+        }
+
+        .logo:hover {
+            transform: translateX(5px);
+            color: #E2E8F0;
+        }
+
+        .nav-links a {
+            color: #FFFFFF; /* 链接改为白色 */
+            text-decoration: none;
+            margin-left: 30px;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: #CBD5E1;
+        }
+
+        /* 文件卡片样式微调 */
+        .file-card {
+            background-color: #ffffff;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            margin: 10px;
+            display: inline-block;
+            width: 200px;
+            border: 1px solid var(--border);
+        }
+
+        .file-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: var(--accent-blue);
+        }
+
+        .search-box input:focus {
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+            border-color: var(--accent-blue);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 120px 0 60px;
+        }
+
+        .hero h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #343a40;
+        }
+
+        .search-box {
+            max-width: 600px;
+            margin: 40px auto;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .file-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .action-buttons {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+            border: none;
+            margin: 0 10px;
+        }
+
+        /* 按钮改为商务中蓝 */
+        .btn-primary {
+            background-color: var(--accent-blue);
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* 修改：拖拽下载区域固定在右上方 */
+        .drag-drop-area {
+            position: fixed;
+            top: 100px;
+            right: 30px;
+            background-color: rgba(255, 255, 255, 0.95);
+            border: 2px dashed var(--accent-blue);
+            border-radius: 12px;
+            padding: 15px 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            z-index: 999;
+            backdrop-filter: blur(4px);
+        }
+
+        .drag-drop-area:hover {
+            background-color: rgba(255, 255, 255, 1);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.2);
+        }
+
+        .drag-drop-area i {
+            margin-right: 10px;
+            color: var(--accent-blue);
+        }
+
+        .file-actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .file-actions button {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            outline: none;
+            border: none;
+        }
+
+        .file-actions button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .navbar { padding: 15px 3%; width: 94%; }
+            .nav-links { display: none; }
+            .drag-drop-area { top: auto; bottom: 20px; left: 50%; right: auto; transform: translateX(-50%); }
+        }
+    </style>
+</head>
+<body>
+<nav class="navbar">
+    <a href="#" class="logo">我的合同模板</a>
+    <div class="nav-links">
+        <a href="http://127.0.0.1:8000">首页</a>
+        <a href="http://127.0.0.1:5002">返回</a>
+    </div>
+</nav>
+
+<div class="container">
+    <div class="hero">
+        <h1>我的模板</h1>
+        <p></p>
+    </div>
+
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="搜索文件..." onkeyup="searchFiles()">
+    </div>
+
+    <div class="action-buttons">
+        <button class="btn btn-primary" onclick="createNewFile()">创建新模板</button>
+        <button class="btn btn-secondary" onclick="refreshFiles()">刷新模板列表</button>
+    </div>
+
+    <div class="file-list" id="fileList">
+        {% for file in all_files %}
+        <div class="file-card" draggable="true" ondragstart="dragStart(event, '{{ file }}')" onclick="window.location.href='/show_md?filename={{ file|urlencode }}'">
+            <h3>{{ file.split('/')[-1] }}</h3>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div id="content"></div>
+</div>
+
+<div class="drag-drop-area" id="dragDropArea">
+    <i class="fa-solid fa-cloud-arrow-down"></i> 拖拽文件到此处下载
+</div>
+
+<script>
+    function searchFiles() {
+        const input = document.getElementById('searchInput');
+        const filter = input.value.toUpperCase();
+        const cards = document.querySelectorAll('.file-card');
+        let found = false;
+
+        cards.forEach(card => {
+            const fileName = card.querySelector('h3').textContent.toUpperCase();
+            if (fileName.indexOf(filter) > -1) {
+                card.style.display = 'block';
+                found = true;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        const contentDiv = document.getElementById('content');
+        if (!found && filter !== '') {
+            contentDiv.innerHTML = '<p class="no-results" style="text-align:center; color:var(--text-sub); margin-top:20px;">没有找到匹配的合同</p>';
+        } else {
+            contentDiv.innerHTML = '';
+        }
+    }
+
+    function dragStart(event, file) {
+        event.dataTransfer.setData('text/plain', file);
+    }
+
+    document.addEventListener('dragover', (e) => {
+        e.preventDefault();
+    });
+
+    function createNewFile() {
+        const filename = prompt('请输入新文件名（.md 或 .docx）：', 'new_document.md');
+        if (filename && (filename.endsWith('.md') || filename.endsWith('.docx'))) {
+            window.location.href = `/create?filename=${filename}`;
+        } else {
+            alert('请输入有效的文件名（必须以 .md 或 .docx 结尾）');
+        }
+    }
+
+    function refreshFiles() {
+        location.reload();
+    }
+
+    const dragDropArea = document.getElementById('dragDropArea');
+    dragDropArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dragDropArea.style.backgroundColor = 'rgba(37, 99, 235, 0.1)';
+        dragDropArea.style.borderColor = '#1D4ED8';
+    });
+
+    dragDropArea.addEventListener('dragleave', () => {
+        dragDropArea.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+        dragDropArea.style.borderColor = 'var(--accent-blue)';
+    });
+
+    dragDropArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dragDropArea.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
+        dragDropArea.style.borderColor = 'var(--accent-blue)';
+
+        const file = e.dataTransfer.getData('text/plain');
+        if (file) {
+            const filename = file.split('/').pop();
+            if (filename) {
+                alert(`文件 "${filename}" 下载已开始！`);
+                window.location.href = `/download?filename=${filename}`;
+            }
+        }
+    });
+
+    window.addEventListener('scroll', function() {
+        const navbar = document.querySelector('.navbar');
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const documentHeader = document.querySelector('.hero h1');
+        const dragDropArea = document.getElementById('dragDropArea');
+
+        setTimeout(() => {
+            if (documentHeader) documentHeader.style.opacity = '1';
+        }, 100);
+
+        setTimeout(() => {
+            if (dragDropArea) dragDropArea.style.opacity = '1';
+        }, 500);
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+# JetBrains / IntelliJ local state
+.idea/workspace.xml
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/shelf/
+.idea/**/httpRequests/
+.idea/**/dataSources/
+*.iws
+*.iml
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Java / Maven
+target/
+*.class
+
+# System / temp
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.temp
+
+# Local machine scripts
+*.bat
+
+# Local environment snapshots / binaries
+env
+QA/oneapi/
+
+# QA ragtest runtime artifacts
+QA/ragtest/cache/
+QA/ragtest/output/
+QA/ragtest/**/__pycache__/
+QA/ragtest/inputs/reports/logs.json
+
+# IDE
+.idea/

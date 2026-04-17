@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>智审云枢 | 合同图谱</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <style>
+        /* ==========================================
+           1.基础布局与背景调色
+           ========================================== */
+        :root {
+            --accent-blue: #2563EB;     /* 核心商务蓝 */
+            --deep-navy: #1E3E7E;       /* 深邃海军蓝 */
+            --bg-light: #f8fafc;        /* 商务底色-浅 */
+            --bg-subtle: #eef2f7;       /* 商务底色-深 */
+            --border-blue: #bfdbfe;
+        }
+
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
+            /* 核心修改：通过渐变消除“惨白”感 */
+            background: radial-gradient(circle at center, var(--bg-light) 0%, var(--bg-subtle) 100%);
+            font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+        }
+
+        #bg-canvas {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; /* 放在底层 */
+        }
+
+        #chart-container { width: 100%; height: 100vh; cursor: grab; z-index: 1; position: relative;}
+        #chart-container:active { cursor: grabbing; }
+
+        /* ==========================================
+           2. UI 组件
+           ========================================== */
+        .guide-badge {
+            position: fixed; top: 30px; left: 50%; transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 10px 28px; border-radius: 50px;
+            box-shadow: 0 4px 20px rgba(30, 62, 126, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            font-size: 14px; font-weight: 600; color: var(--deep-navy);
+            z-index: 1000; pointer-events: none;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .guide-badge i { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-blue); }
+
+        .search-box {
+            position: fixed; top: 30px; left: 30px;
+            z-index: 1000; display: flex;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 6px; border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(30, 62, 126, 0.12);
+            border: 1px solid var(--border-blue);
+        }
+        .search-box input {
+            border: none; outline: none; padding: 8px 18px;
+            font-size: 14px; width: 240px; background: transparent; color: #1e293b;
+        }
+        .search-box button {
+            background: var(--accent-blue); color: #fff; border: none;
+            padding: 10px 24px; border-radius: 8px; cursor: pointer;
+            font-weight: 600; transition: 0.3s; font-size: 14px;
+        }
+        .search-box button:hover { background: var(--deep-navy); transform: translateY(-1px); }
+
+        .home-btn {
+            position: fixed; top: 32px; right: 30px;
+            z-index: 50;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px 24px; border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(30, 62, 126, 0.1);
+            border: 1.5px solid var(--accent-blue);
+            color: var(--accent-blue); text-decoration: none;
+            font-size: 14px; font-weight: 700; transition: all 0.3s ease;
+        }
+        .home-btn:hover { background: var(--accent-blue); color: #fff; }
+
+        /* ==========================================
+           3. 图谱节点样式 (保持原有)
+           ========================================== */
+        .node { cursor: pointer; }
+        .node rect {
+            transition: all 0.3s ease;
+            fill: #ffffff; stroke: #d1d5db; stroke-width: 1px;
+        }
+        .node:hover rect {
+            transform: translateY(-3px);
+            stroke: var(--accent-blue) !important; stroke-width: 2.5px !important;
+            filter: drop-shadow(0 10px 15px rgba(37, 99, 235, 0.2));
+        }
+
+        .node.root rect { fill: url(#root-gradient) !important; stroke: none; }
+        .node.root text { fill: #fff !important; font-weight: 800; font-size: 20px; }
+        .node.level-1 text { fill: var(--accent-blue); font-weight: 700; }
+        .node.level-1 rect { fill: #f0f7ff; stroke: var(--border-blue); }
+        .node text { font-size: 16px; pointer-events: none; dominant-baseline: middle; }
+        .link { fill: none; stroke: #94a3b8; stroke-width: 1.5px; opacity: 0.3; }
+
+        /* 搜索匹配 */
+        .node.found rect {
+            stroke: #dc2626 !important; stroke-width: 3px !important;
+            fill: #fef2f2 !important; animation: pulse 1.5s infinite;
+        }
+        .node.path rect { stroke: #f59e0b !important; stroke-width: 2.5px !important; }
+        .link.path { stroke: #f59e0b !important; stroke-width: 2.5px !important; opacity: 0.8 !important; }
+
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.04); } 100% { transform: scale(1); } }
+
+        /* ==========================================
+           5. 右侧详情侧边栏
+           ========================================== */
+        .sidebar {
+            position: fixed; top: 0; right: -500px; width: 450px; height: 100%;
+            background: rgba(255, 255, 255, 0.98); backdrop-filter: blur(15px);
+            box-shadow: -10px 0 35px rgba(30, 62, 126, 0.1); transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 100; display: flex; flex-direction: column;
+        }
+        .sidebar.visible { right: 0; }
+        .sidebar-header {
+            padding: 30px 40px; background: #f8fafc; border-bottom: 1px solid var(--border-blue);
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .sidebar h2 { margin: 0; font-size: 22px; color: var(--deep-navy); font-weight: 700; }
+        .tag {
+            display: inline-block; padding: 6px 16px; border-radius: 6px;
+            background: var(--accent-blue); color: #fff;
+            font-size: 13px; margin-bottom: 18px; font-weight: 600;
+        }
+        .sidebar-body { flex: 1; overflow-y: auto; padding: 35px 40px; }
+        #detail-content { line-height: 1.8; color: #334155; font-size: 16px; text-align: justify; }
+    </style>
+</head>
+<body>
+
+<!-- 粒子背景层 -->
+<canvas id="bg-canvas"></canvas>
+
+<svg style="position: absolute; width: 0; height: 0; overflow: hidden;" version="1.1">
+    <defs>
+        <linearGradient id="root-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:var(--accent-blue); stop-opacity:1" />
+            <stop offset="100%" style="stop-color:var(--deep-navy); stop-opacity:1" />
+        </linearGradient>
+    </defs>
+</svg>
+
+<a href="http://127.0.0.1:8000" class="home-btn">返回首页</a>
+
+<div class="guide-badge">
+    <span><i></i> 交互式合同知识图谱</span>
+    <span style="color:#cbd5e1">|</span>
+    <span>滚动缩放，点击查看详情</span>
+</div>
+
+<div class="search-box">
+    <input type="text" id="search-input" placeholder="输入合同关键词...">
+    <button onclick="performSearch()">搜索</button>
+</div>
+
+<div id="chart-container"></div>
+
+<aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2 id="detail-title">节点标题</h2>
+        <div class="close-btn" onclick="closeSidebar()">×</div>
+    </div>
+    <div class="sidebar-body">
+        <div class="detail-card">
+            <div class="tag">合同条款内容</div>
+            <div id="detail-content"></div>
+        </div>
+    </div>
+</aside>
+
+<script>
+    /* 1. 粒子背景 - 修改配色以协调商务蓝 */
+    (function() {
+        const canvas = document.getElementById('bg-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, particles = [];
+        let mouse = { x: null, y: null };
+        // 修改点：粒子颜色改为深蓝系，降低透明度，更像水印
+        const config = { count: 80, color: '30, 62, 126', opacity: 0.15, connDist: 150, mouseDist: 200 };
+
+        function resize() { width = window.innerWidth; height = window.innerHeight; canvas.width = width; canvas.height = height; }
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width; this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5;
+                this.size = Math.random() * 2 + 1;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+                if (mouse.x != null) {
+                    let dx = mouse.x - this.x, dy = mouse.y - this.y;
+                    let dist = Math.sqrt(dx*dx + dy*dy);
+                    if (dist < config.mouseDist) {
+                        this.x -= (dx/dist) * (config.mouseDist - dist) * 0.003;
+                        this.y -= (dy/dist) * (config.mouseDist - dist) * 0.003;
+                    }
+                }
+            }
+            draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fillStyle = `rgba(${config.color}, ${config.opacity})`; ctx.fill(); }
+        }
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            particles.forEach((p, i) => {
+                p.update(); p.draw();
+                for (let j = i + 1; j < particles.length; j++) {
+                    let p2 = particles[j], dx = p.x - p2.x, dy = p.y - p2.y, d = Math.sqrt(dx*dx+dy*dy);
+                    if (d < config.connDist) {
+                        ctx.beginPath(); ctx.strokeStyle = `rgba(${config.color}, ${(1-d/config.connDist)*0.15})`;
+                        ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
+                    }
+                }
+            });
+            requestAnimationFrame(animate);
+        }
+        window.addEventListener('resize', () => { resize(); particles = []; for(let i=0; i<config.count; i++) particles.push(new Particle()); });
+        window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+        resize(); for(let i=0; i<config.count; i++) particles.push(new Particle()); animate();
+    })();
+
+    /* 2. D3 逻辑 (保持原有逻辑不变) */
+    const chartConfig = { duration: 500, nodeWidth: 280, nodeHeight: 60, rectMinW: 140, rectH: 48, bracketGap: 25 };
+    const svg = d3.select("#chart-container").append("svg")
+        .attr("width", "100%").attr("height", "100%")
+        .call(d3.zoom().scaleExtent([0.2, 3]).on("zoom", e => g.attr("transform", e.transform)))
+        .on("dblclick.zoom", null);
+    const g = svg.append("g").attr("transform", `translate(80, ${window.innerHeight/2})`);
+    let i = 0, root;
+
+    d3.json("/data.json").then(data => {
+        root = d3.hierarchy(data);
+        root.x0 = window.innerHeight / 2; root.y0 = 0;
+        root.children.forEach(function collapse(d) {
+            if (d.children) { d.children.forEach(collapse); d._children = d.children; d.children = null; }
+        });
+        update(root);
+    });
+
+    function update(source) {
+        const treeData = d3.tree().nodeSize([chartConfig.nodeHeight, chartConfig.nodeWidth])(root);
+        const nodes = treeData.descendants(), links = treeData.links();
+        nodes.forEach(d => { d.finalX = d.x; d.finalY = d.y; });
+        const node = g.selectAll('g.node').data(nodes, d => d.id || (d.id = ++i));
+        const nodeEnter = node.enter().append('g')
+            .attr('class', d => `node ${d.depth === 0 ? 'root' : (d.depth === 1 ? 'level-1' : (d.children || d._children ? 'branch' : 'leaf'))}`)
+            .attr('transform', d => `translate(${source.y0},${source.x0})`)
+            .on('click', click);
+        nodeEnter.append('rect').attr('height', chartConfig.rectH).attr('y', -chartConfig.rectH/2).attr('rx', 8);
+        nodeEnter.append('text').attr('dy', 1).text(d => d.data.name).style('fill-opacity', 0);
+        const nodeUpdate = node.merge(nodeEnter).transition().duration(chartConfig.duration)
+            .attr('transform', d => `translate(${d.finalY},${d.finalX})`);
+        nodeUpdate.select('text').style('fill-opacity', 1);
+        nodeUpdate.each(function(d) {
+            const text = d3.select(this).select('text'), rect = d3.select(this).select('rect');
+            const bbox = text.node().getBBox();
+            const w = Math.max(chartConfig.rectMinW, bbox.width + 45);
+            d.width = w;
+            text.attr('text-anchor', 'middle').attr('x', w/2);
+            rect.attr('width', w).attr('x', 0);
+            d3.select(this).classed('found', d.data.isFound).classed('path', d.data.isPath && !d.data.isFound);
+        });
+        node.exit().transition().duration(chartConfig.duration).attr('transform', d => `translate(${source.y},${source.x})`).remove();
+        const link = g.selectAll('path.link').data(links, d => d.target.id);
+        const linkEnter = link.enter().insert('path', "g")
+            .attr("class", d => d.target.data.isPath ? "link path" : "link")
+            .attr('d', d => { const o = { x: source.x0, y: source.y0, width: chartConfig.rectMinW }; return drawRightBracketPath({ source: o, target: o }); });
+        link.merge(linkEnter).attr("class", d => d.target.data.isPath ? "link path" : "link")
+            .transition().duration(chartConfig.duration).attr('d', d => drawRightBracketPath(d));
+        link.exit().transition().duration(chartConfig.duration).remove();
+        nodes.forEach(d => { d.x0 = d.x; d.y0 = d.y; });
+    }
+
+    function drawRightBracketPath(params) {
+        const s = params.source, t = params.target;
+        const sx = s.finalY || 0, sy = s.finalX || 0, tx = t.finalY || 0, ty = t.finalX || 0;
+        const startX = sx + (s.width || chartConfig.rectMinW), vLineX = startX + chartConfig.bracketGap;
+        const vDir = ty > sy ? 1 : -1, r = 12;
+        if (Math.abs(ty - sy) < 2) return `M ${startX},${sy} L ${tx},${ty}`;
+        return `M ${startX},${sy} L ${vLineX-r},${sy} Q ${vLineX},${sy} ${vLineX},${sy+r*vDir} L ${vLineX},${ty-r*vDir} Q ${vLineX},${ty} ${vLineX+r},${ty} L ${tx},${ty}`;
+    }
+
+    function click(event, d) {
+        if (d.data.lines || d.data.value) {
+            document.getElementById('detail-title').innerText = d.data.name;
+            document.getElementById('detail-content').innerText = d.data.lines || d.data.value;
+            document.getElementById('sidebar').classList.add('visible');
+        }
+        if (d.children || d._children) {
+            if (d.children) { d._children = d.children; d.children = null; }
+            else { d.children = d._children; d._children = null; }
+            update(d);
+        }
+    }
+    function closeSidebar() { document.getElementById('sidebar').classList.remove('visible'); }
+    function getAllNodes(node) {
+        let nodes = [];
+        function traverse(n) { nodes.push(n); if (n.children) n.children.forEach(traverse); if (n._children) n._children.forEach(traverse); }
+        traverse(node); return nodes;
+    }
+    function centerNode(source) {
+        const targetX = -source.finalY + window.innerWidth / 2 - 150;
+        const targetY = -source.finalX + window.innerHeight / 2;
+        g.transition().duration(1000).attr("transform", `translate(${targetX},${targetY}) scale(1.05)`);
+    }
+    function performSearch() {
+        const keyword = document.getElementById('search-input').value;
+        if (!keyword) return;
+        fetch(`/api/search?q=${encodeURIComponent(keyword)}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.length === 0) { alert("未识别到对应条款，建议检查关键词或查看合同知识体系"); return; }
+                const allNodes = getAllNodes(root);
+                allNodes.forEach(d => { d.data.isFound = false; d.data.isPath = false; });
+                let firstMatch = null;
+                data.forEach(result => {
+                    allNodes.filter(d => d.data.name === result.name).forEach(target => {
+                        if (!firstMatch) firstMatch = target;
+                        target.data.isFound = true;
+                        let curr = target;
+                        while(curr) {
+                            if (curr.parent && curr.parent._children) { curr.parent.children = curr.parent._children; curr.parent._children = null; }
+                            curr.data.isPath = true; curr = curr.parent;
+                        }
+                    });
+                });
+                update(root);
+                if (firstMatch) setTimeout(() => centerNode(firstMatch), chartConfig.duration + 100);
+            });
+    }
+    document.getElementById('search-input').addEventListener('keypress', e => { if (e.key === 'Enter') performSearch(); });
+</script>
+</body>
+</html>

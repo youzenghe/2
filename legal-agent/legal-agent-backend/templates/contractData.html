@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>合同信息管理系统</title>
+    <link href="https://unpkg.com/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <style>
+        :root {
+            --main-bg: linear-gradient(135deg, #9dbfff 0%, #709dff 100%);
+            --card-bg: rgba(255, 255, 255, 0.7);
+            --primary-blue: #007bff;
+            --accent-blue: #4a90e2;
+            --text-dark: #1a2a4a;
+            --border-radius: 20px;
+        }
+
+        body {
+            background: var(--main-bg);
+            background-attachment: fixed;
+            font-family: 'Segoe UI', 'PingFang SC', sans-serif;
+            color: var(--text-dark);
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.4) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.8rem 2rem;
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            color: var(--primary-blue) !important;
+        }
+
+        .btn-logout {
+            border: 1px solid var(--primary-blue) !important;
+            color: var(--primary-blue) !important;
+            background: transparent !important;
+            border-radius: 10px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-logout:hover {
+            background: var(--primary-blue) !important;
+            color: #fff !important;
+            transform: translateY(-2px);
+        }
+
+        .main-container {
+            padding: 3rem 2rem;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: var(--border-radius);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: visible;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 25px; left: 25px;
+            width: 40px; height: 40px;
+            border-top: 4px solid var(--primary-blue);
+            border-left: 4px solid var(--primary-blue);
+            z-index: 10;
+            opacity: 0.6;
+        }
+
+        .card-header {
+            background: transparent !important;
+            border: none;
+            padding: 3.5rem 2rem 1rem;
+            text-align: center;
+        }
+
+        .card-title {
+            font-size: 3.5rem !important;
+            letter-spacing: 15px;
+            color: var(--text-dark);
+            font-weight: 900;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .status-indicator {
+            font-size: 14px;
+            color: #66768e;
+            letter-spacing: 4px;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .status-dot {
+            display: inline-block;
+            width: 10px; height: 10px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            margin-right: 10px;
+            box-shadow: 0 0 10px var(--accent-blue);
+            animation: pulse 2s infinite;
+        }
+
+        .filter-section {
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .sub-title-text {
+            color: #718096;
+            font-size: 1rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        .sub-title-text::before {
+            content: "";
+            display: inline-block;
+            width: 4px;
+            height: 16px;
+            background: var(--accent-blue);
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+
+        .form-control, .form-select {
+            border-radius: 10px;
+            border: 1px solid rgba(58, 90, 143, 0.2);
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            padding: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .table thead th {
+            color: var(--primary-blue);
+            border-bottom: 2px solid rgba(58, 90, 143, 0.1) !important;
+            font-weight: 700;
+            background: transparent;
+            white-space: nowrap;
+        }
+
+        .contract-name-black {
+            color: #000000 !important;
+            font-weight: 700;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue) !important;
+            border: none;
+            border-radius: 10px;
+            padding: 8px 20px;
+            font-weight: 600;
+        }
+
+        .btn-edit {
+            border: 1px solid #cbd5e0;
+            background: #fff;
+            color: #4a5568;
+            border-radius: 6px;
+        }
+
+        .btn-delete {
+            border: 1px solid #feb2b2;
+            background: transparent;
+            color: #f56565;
+            border-radius: 6px;
+        }
+        .btn-delete:hover { background: #f56565; color: #fff; }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-file-contract me-2"></i>合同信息管理系统
+        </a>
+        <div class="navbar-nav ms-auto d-flex flex-row align-items-center">
+            <div class="ms-4 d-flex align-items-center">
+                <div class="rounded-circle bg-white d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 35px; height: 35px;">
+                    <i class="fas fa-user text-primary"></i>
+                </div>
+                <span class="fw-bold">管理员</span>
+            </div>
+            <a href="http://127.0.0.1:8003/" class="btn btn-sm btn-logout ms-3">
+                <i class="fas fa-home me-1"></i>返回管理中枢
+            </a>
+            <button class="btn btn-sm btn-logout ms-2" onclick="confirmLogout()">
+                <i class="fas fa-sign-out-alt me-1"></i>退出系统
+            </button>
+        </div>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">合同信息列表</h2>
+            <div class="status-indicator">
+                <span class="status-dot"></span> SYSTEM OPERATIONAL &nbsp; | &nbsp; ENCRYPTION: AES-256
+            </div>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="filter-section">
+                <p class="sub-title-text">管理系统中的所有合同信息</p>
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
+                            <input type="text" id="searchInput" class="form-control border-start-0 shadow-none" placeholder="搜索合同名称、客户ID或风险等级...">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <select id="typeFilter" class="form-select shadow-none">
+                            <option value="">所有合同类型</option>
+                            <option value="服务合同">服务合同</option>
+                            <option value="销售合同">销售合同</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5 text-end">
+                        <button class="btn btn-primary me-2" onclick="showAddModal()">
+                            <i class="fas fa-plus me-1"></i>新增合同
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="exportData()" style="border-radius: 10px;">
+                            <i class="fas fa-download me-1"></i>导出数据
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" id="contractTable">
+                        <thead>
+                              <tr>
+                                <th>合同名称</th>
+                                <th>合同类型</th>
+                                <th>合同金额</th>
+                                <th>支付条款</th>
+                                <th>履行开始日期</th>
+                                <th>履行结束日期</th>
+                                <th>交付条款</th>
+                                <th>违约条款</th>
+                                <th>甲方信用评级</th>
+                                <th class="text-center">操作指令</th>
+                              </tr>
+                        </thead>
+                        <tbody id="contractTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-4 px-2">
+                    <div id="paginationInfo" class="text-muted small">显示 0-0 条，共 0 条记录</div>
+                    <div class="d-flex align-items-center">
+                        <div class="input-group input-group-sm" style="width: 150px;">
+                            <span class="input-group-text bg-transparent border-0">跳至</span>
+                            <input type="number" id="jumpPageInput" class="form-control text-center" value="1">
+                            <button class="btn btn-primary ms-2" onclick="jumpToPage()" style="border-radius: 5px;">跳转</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 新增/编辑弹窗 -->
+<div class="modal fade" id="contractModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="modalTitle">新增合同信息</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="contractForm">
+                    <input type="hidden" id="editIndex">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">合同名称</label>
+                            <input type="text" class="form-control" id="contractName" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">合同类型</label>
+                            <select class="form-select" id="contractType">
+                                <option value="服务合同">服务合同</option>
+                                <option value="销售合同">销售合同</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">合同金额</label>
+                            <input type="text" class="form-control" id="contractAmount">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">支付条款</label>
+                            <input type="text" class="form-control" id="payTerms">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">履行开始日期</label>
+                            <input type="date" class="form-control" id="startDate">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold">履行结束日期</label>
+                            <input type="date" class="form-control" id="endDate">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">交付条款</label>
+                            <input type="text" class="form-control" id="deliveryTerms">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">违约条款</label>
+                            <input type="text" class="form-control" id="penaltyTerms">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold">甲方信用评级</label>
+                            <input type="text" class="form-control" id="creditRating">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveContract()">保存合同</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://unpkg.com/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    let contracts = [
+        { name: "年度技术服务协议", type: "服务合同", amount: "￥500,000", pay: "分期支付", start: "2025-01-01", end: "2025-12-31", delivery: "按月交付", penalty: "5%", credit: "AAA" },
+        { name: "硬件设备采购合同", type: "销售合同", amount: "￥1,200,000", pay: "一次性", start: "2025-03-15", end: "2025-06-15", delivery: "整批交付", penalty: "10%", credit: "AA" }
+    ];
+
+    function renderTable(data = contracts) {
+        let html = "";
+        data.forEach((item, index) => {
+            html += `
+                <tr class="animate__animated animate__fadeIn">
+                    <td class="contract-name-black">${item.name}</td>
+                    <td><span class="badge bg-light text-dark border">${item.type}</span></td>
+                    <td class="text-success fw-bold">${item.amount}</td>
+                    <td>${item.pay}</td>
+                    <td>${item.start}</td>
+                    <td>${item.end}</td>
+                    <td>${item.delivery}</td>
+                    <td>${item.penalty}</td>
+                    <td><span class="badge bg-info">${item.credit}</span></td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-edit me-1" onclick="editContract(${index})">编辑</button>
+                        <button class="btn btn-sm btn-delete" onclick="deleteContract(${index})">注销</button>
+                    </td>
+                </tr>
+            `;
+        });
+        $('#contractTableBody').html(html || '<tr><td colspan="10" class="text-center py-4 text-muted">暂无匹配数据</td></tr>');
+        $('#paginationInfo').text(`显示 1-${data.length} 条，共 ${data.length} 条记录`);
+    }
+
+    $('#searchInput, #typeFilter').on('keyup change', function() {
+        const query = $('#searchInput').val().toLowerCase();
+        const type = $('#typeFilter').val();
+        const filtered = contracts.filter(c =>
+            (c.name.toLowerCase().includes(query)) &&
+            (type === "" || c.type === type)
+        );
+        renderTable(filtered);
+    });
+
+    function showAddModal() {
+        $('#modalTitle').text('新增合同信息');
+        $('#contractForm')[0].reset();
+        $('#editIndex').val('-1');
+        new bootstrap.Modal($('#contractModal')).show();
+    }
+
+    function editContract(index) {
+        const item = contracts[index];
+        $('#modalTitle').text('编辑合同信息');
+        $('#editIndex').val(index);
+        $('#contractName').val(item.name);
+        $('#contractType').val(item.type);
+        $('#contractAmount').val(item.amount);
+        $('#payTerms').val(item.pay);
+        $('#startDate').val(item.start);
+        $('#endDate').val(item.end);
+        $('#deliveryTerms').val(item.delivery);
+        $('#penaltyTerms').val(item.penalty);
+        $('#creditRating').val(item.credit);
+        new bootstrap.Modal($('#contractModal')).show();
+    }
+
+    function saveContract() {
+        const index = parseInt($('#editIndex').val());
+        const newData = {
+            name: $('#contractName').val(),
+            type: $('#contractType').val(),
+            amount: $('#contractAmount').val(),
+            pay: $('#payTerms').val(),
+            start: $('#startDate').val(),
+            end: $('#endDate').val(),
+            delivery: $('#deliveryTerms').val(),
+            penalty: $('#penaltyTerms').val(),
+            credit: $('#creditRating').val()
+        };
+
+        if(!newData.name) return alert('请输入合同名称');
+
+        if(index === -1) {
+            contracts.push(newData);
+        } else {
+            contracts[index] = newData;
+        }
+
+        renderTable();
+        bootstrap.Modal.getInstance($('#contractModal')).hide();
+        Swal.fire('成功', '合同信息已更新', 'success');
+    }
+
+    function deleteContract(index) {
+        Swal.fire({
+            title: '确定注销?',
+            text: "此操作无法撤销！",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#007bff',
+            confirmButtonText: '确定',
+            cancelButtonText: '取消'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                contracts.splice(index, 1);
+                renderTable();
+            }
+        });
+    }
+
+    function exportData() {
+        Swal.fire('导出成功', '合同数据已准备好下载', 'success');
+    }
+
+    function jumpToPage() {
+        Swal.fire('提示', '分页跳转功能已就绪', 'info');
+    }
+
+    function confirmLogout() {
+        if(confirm("是否退出系统？")) {
+            window.location.href = "http://127.0.0.1:5011/";
+        }
+    }
+
+    $(document).ready(() => renderTable());
+</script>
+
+</body>
+</html>

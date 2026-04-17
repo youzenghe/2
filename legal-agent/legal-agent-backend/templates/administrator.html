@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智审云枢 | 管理员端</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 商务蓝重构色系 */
+            --accent-blue: #2563EB;
+            --deep-navy: #1E3E7E;
+            --color-success: #00B42A;
+            --color-warning: #FF7D00;
+            --color-error: #F53F3F;
+            --text-primary: #1D2129;
+            --text-secondary: #4E5969;
+            --border-color: #C9CDD4;
+            --bg-color: #F2F3F5;
+            --card-bg: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+
+        body {
+            /* 浅色商务背景渐变 */
+            background: radial-gradient(circle at top right, #EBF2FA 0%, var(--bg-color) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.8; /* 适应浅色底调整透明度 */
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 440px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 3rem 3.5rem;
+            border-radius: 12px;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 20px 60px rgba(29, 33, 41, 0.08);
+            border-top: 4px solid var(--accent-blue);
+            animation: cardFadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes cardFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .card-header h1 {
+            color: var(--deep-navy);
+            font-size: 1.6rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 0.6rem;
+        }
+
+        .card-header p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            margin-bottom: 0.6rem;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: var(--text-secondary);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .icon-left { left: 1.2rem; }
+
+        .icon-eye {
+            right: 1.2rem;
+            cursor: pointer;
+            stroke: var(--text-secondary);
+        }
+
+        .icon-eye:hover { stroke: var(--accent-blue); }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.9rem 2.8rem 0.9rem 3rem;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+        }
+
+        .input-wrapper input:focus ~ .icon-left {
+            stroke: var(--accent-blue);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            user-select: none;
+        }
+
+        .checkbox-container input { display: none; }
+
+        .checkmark {
+            width: 16px;
+            height: 16px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-right: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-container input:checked ~ .checkmark {
+            background-color: var(--accent-blue);
+            border-color: var(--accent-blue);
+        }
+
+        .checkmark svg {
+            width: 12px;
+            height: 12px;
+            stroke: #FFFFFF;
+            stroke-width: 3;
+            opacity: 0;
+            transform: scale(0.5);
+            transition: all 0.2s ease;
+        }
+
+        .checkbox-container input:checked ~ .checkmark svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .link-text {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s;
+        }
+
+        .link-text:hover { color: var(--accent-blue); }
+
+        .slider-captcha {
+            width: 100%;
+            height: 44px;
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            position: relative;
+            margin-bottom: 2rem;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+
+        .slider-text {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            z-index: 1;
+            pointer-events: none;
+            transition: color 0.3s;
+        }
+
+        .slider-bg {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background-color: rgba(37, 99, 235, 0.1); /* 蓝色透明 */
+            z-index: 2;
+        }
+
+        .slider-btn {
+            position: absolute;
+            left: 2px;
+            top: 2px;
+            width: 40px;
+            height: 38px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            z-index: 3;
+            color: var(--text-secondary);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: color 0.3s, background-color 0.2s;
+        }
+
+        .slider-btn:active { cursor: grabbing; background-color: var(--bg-color); }
+
+        /* 滑块成功态：使用定义的成功色 */
+        .slider-captcha.success { border-color: var(--color-success); }
+        .slider-captcha.success .slider-bg { background-color: rgba(0, 180, 42, 0.1); }
+        .slider-captcha.success .slider-btn { color: var(--color-success); border-color: var(--color-success); }
+        .slider-captcha.success .slider-text { color: var(--color-success); font-weight: bold;}
+
+        .btn-login {
+            width: 100%;
+            padding: 0.95rem;
+            background-color: var(--accent-blue);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-login:hover:not(:disabled) {
+            background-color: #1D4ED8; /* 加深的商务蓝 */
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-login:disabled {
+            background-color: var(--border-color);
+            color: var(--card-bg);
+            cursor: not-allowed;
+            opacity: 0.8;
+            box-shadow: none;
+        }
+
+        .alert-box {
+            display: none;
+            background-color: rgba(245, 63, 63, 0.08);
+            border: 1px solid rgba(245, 63, 63, 0.2);
+            color: var(--color-error);
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .card-footer {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--bg-color);
+        }
+    </style>
+</head>
+<body>
+
+<div id="particles-js"></div>
+
+<div class="login-card">
+    <div class="card-header">
+        <h1>合同风险智审平台</h1>
+        <p>专业 · 安全 · 高效协同</p>
+    </div>
+
+    <div class="alert-box" id="alertBox"></div>
+
+    <form id="loginForm" onsubmit="return false;">
+        <div class="form-group">
+            <label for="username">管理员账号</label>
+            <div class="input-wrapper">
+                <input type="text" id="username" placeholder="请输入管理员账号" required autocomplete="off">
+                <svg class="input-icon icon-left" viewBox="0 0 24 24">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="password">登录密码</label>
+            <div class="input-wrapper">
+                <input type="password" id="password" placeholder="请输入密码" required>
+                <svg class="input-icon icon-left" viewBox="0 0 24 24">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <svg class="input-icon icon-eye" id="togglePassword" viewBox="0 0 24 24" onclick="togglePwdVis()">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </div>
+        </div>
+
+        <div class="form-options">
+            <label class="checkbox-container">
+                <input type="checkbox" id="rememberMe">
+                <div class="checkmark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                记住账号
+            </label>
+            <a href="{{ url_for('administrator1_page') }}" class="link-text">重置密码?</a>
+        </div>
+
+        <div class="slider-captcha" id="sliderCaptcha">
+            <div class="slider-bg" id="sliderBg"></div>
+            <div class="slider-text" id="sliderText">向右滑动验证</div>
+            <div class="slider-btn" id="sliderBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="13 17 18 12 13 7"></polyline>
+                    <polyline points="6 17 11 12 6 7"></polyline>
+                </svg>
+            </div>
+        </div>
+
+        <button type="button" class="btn-login" id="loginBtn" onclick="submitLoginForm()" disabled>
+            <span id="btnText">安全登录</span>
+        </button>
+
+        <div class="card-footer">
+            <a href="http://127.0.0.1:5000" class="link-text">← 返回系统首页</a>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        particlesJS('particles-js', {
+            "particles": {
+                "number": { "value": 45, "density": { "enable": true, "value_area": 800 } },
+                "color": { "value": "#2563EB" }, /* 替换为商务主蓝 */
+                "shape": { "type": "circle" },
+                "opacity": { "value": 0.2, "random": false },
+                "size": { "value": 2.5, "random": true },
+                "line_linked": { "enable": true, "distance": 180, "color": "#2563EB", "opacity": 0.15, "width": 1 },
+                "move": { "enable": true, "speed": 1, "direction": "none", "random": true, "out_mode": "out" }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": { "onhover": { "enable": true, "mode": "grab" }, "onclick": { "enable": false }, "resize": true },
+                "modes": { "grab": { "distance": 140, "line_linked": { "opacity": 0.4 } } }
+            },
+            "retina_detect": true
+        });
+    });
+
+    function togglePwdVis() {
+        const pwdInput = document.getElementById('password');
+        const eyeIcon = document.getElementById('togglePassword');
+
+        if (pwdInput.type === 'password') {
+            pwdInput.type = 'text';
+            eyeIcon.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>`;
+            eyeIcon.style.stroke = 'var(--accent-blue)';
+        } else {
+            pwdInput.type = 'password';
+            eyeIcon.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>`;
+            eyeIcon.style.stroke = 'var(--text-secondary)';
+        }
+    }
+
+    let isSliderVerified = false;
+    const sliderBtn = document.getElementById('sliderBtn');
+    const sliderBg = document.getElementById('sliderBg');
+    const sliderText = document.getElementById('sliderText');
+    const sliderCaptcha = document.getElementById('sliderCaptcha');
+    const loginBtn = document.getElementById('loginBtn');
+
+    let isDragging = false;
+    let startX = 0;
+
+    sliderBtn.addEventListener('mousedown', (e) => {
+        if(isSliderVerified) return;
+        isDragging = true;
+        startX = e.clientX;
+        sliderBtn.style.transition = 'none';
+        sliderBg.style.transition = 'none';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+
+        let moveX = e.clientX - startX;
+        let maxMove = sliderCaptcha.offsetWidth - sliderBtn.offsetWidth - 4;
+
+        if (moveX < 0) moveX = 0;
+        if (moveX >= maxMove) {
+            moveX = maxMove;
+            isDragging = false;
+            isSliderVerified = true;
+
+            sliderCaptcha.classList.add('success');
+
+            sliderBtn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            sliderText.innerHTML = '安全验证通过';
+
+            loginBtn.disabled = false;
+            sliderBtn.style.transition = 'color 0.3s, background-color 0.2s';
+            sliderBg.style.transition = 'background-color 0.3s';
+        }
+
+        sliderBtn.style.left = (moveX + 2) + 'px';
+        sliderBg.style.width = (moveX + 10) + 'px';
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (!isDragging) return;
+        isDragging = false;
+
+        if (!isSliderVerified) {
+            sliderBtn.style.transition = 'left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            sliderBg.style.transition = 'width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            sliderBtn.style.left = '2px';
+            sliderBg.style.width = '0px';
+        }
+    });
+
+    function showError(msg) {
+        const alertBox = document.getElementById('alertBox');
+        alertBox.textContent = msg;
+        alertBox.style.display = 'block';
+
+        const card = document.querySelector('.login-card');
+        card.style.transform = 'translateX(-6px)';
+        setTimeout(() => card.style.transform = 'translateX(5px)', 60);
+        setTimeout(() => card.style.transform = 'translateX(-3px)', 120);
+        setTimeout(() => card.style.transform = 'translateX(0)', 180);
+    }
+
+    function submitLoginForm() {
+        if (!isSliderVerified) return;
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        const btnText = document.getElementById('btnText');
+
+        document.getElementById('alertBox').style.display = 'none';
+
+        if (!username || !password) {
+            showError("请完整填写管理员账号和密码。");
+            return;
+        }
+
+        loginBtn.disabled = true;
+        btnText.textContent = '验证中...';
+
+        fetch('/administrator', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loginBtn.style.backgroundColor = 'var(--accent-blue)';
+                btnText.textContent = '登录成功，正在跳转';
+                setTimeout(() => window.location.href = data.redirect_url, 800);
+            } else {
+                showError(data.message || "核验失败，请重试");
+                resetBtn();
+                resetSlider();
+            }
+        })
+        .catch(error => {
+            showError("网络请求异常");
+            resetBtn();
+        });
+
+        function resetBtn() {
+            loginBtn.disabled = false;
+            btnText.textContent = '安全登录';
+        }
+
+        function resetSlider() {
+            isSliderVerified = false;
+            sliderCaptcha.classList.remove('success');
+
+            sliderBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"></polyline><polyline points="6 17 11 12 6 7"></polyline></svg>`;
+            sliderText.innerHTML = '向右滑动验证';
+
+            sliderBtn.style.transition = 'left 0.4s ease';
+            sliderBg.style.transition = 'width 0.4s ease';
+            sliderBtn.style.left = '2px';
+            sliderBg.style.width = '0px';
+            loginBtn.disabled = true;
+        }
+    }
+
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter' && isSliderVerified) {
+            submitLoginForm();
+        }
+    });
+</script>
+
+</body>
+</html>

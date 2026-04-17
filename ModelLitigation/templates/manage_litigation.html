@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>诉讼文书库 - 管理系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ===== 商务蓝色系变量 ===== */
+        :root {
+            --accent-blue: #2563EB;
+            --deep-navy: #1E3E7E;
+            --bg-body: #F4F7FA;
+            --bg-card: #FFFFFF;
+            --border: #E2E8F0;
+            --text-main: #334155;
+            --text-sub: #94A3B8;
+
+            --btn-view-bg: rgba(78, 115, 223, 0.08);   --btn-view-text: #4E73DF;
+            --btn-edit-bg: rgba(217, 149, 65, 0.08);   --btn-edit-text: #D99541;
+            --btn-down-bg: rgba(100, 116, 139, 0.05);   --btn-down-text: #64748B;
+            --btn-del-bg: rgba(229, 91, 91, 0.08);     --btn-del-text: #E55B5B;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html, body {
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-main);
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            padding: 20px 50px 30px;
+        }
+
+        /* --- 顶部标题 (优化排版) --- */
+        .top-header {
+            height: 100px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-left: 6px solid var(--accent-blue);
+            padding-left: 25px;
+            margin-bottom: 20px;
+        }
+        .top-header h1 {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--deep-navy);
+            letter-spacing: -1px;
+            display: flex;
+            align-items: baseline;
+        }
+        .top-header .sub-text {
+            font-size: 16px;
+            font-weight: 400;
+            color: var(--text-sub);
+            margin-left: 18px;
+            letter-spacing: 1px;
+            opacity: 0.7;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        /* 首页按钮样式 */
+        .btn-home {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: transparent;
+            color: var(--accent-blue);
+            border: 1.5px solid var(--accent-blue);
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .btn-home:hover {
+            background: var(--accent-blue);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+        }
+
+        .logout-btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: 1px solid var(--btn-del-text);
+            background: transparent;
+            color: var(--btn-del-text);
+            cursor: pointer;
+            font-weight: 600;
+            transition: 0.2s;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logout-btn:hover {
+            background: var(--btn-del-text);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        /* --- 主布局 --- */
+        .main-layout {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: 340px 1fr;
+            gap: 30px;
+            overflow: hidden;
+        }
+
+        /* --- 左侧面板 --- */
+        .left-panel { display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
+        .side-card {
+            background: var(--bg-card); border-radius: 12px; padding: 24px;
+            border: 1px solid var(--border); box-shadow: 0 2px 4px rgba(0,0,0,0.02); flex-shrink: 0;
+        }
+        .card-h3 { font-size: 15px; margin-bottom: 20px; color: var(--deep-navy); font-weight: 600; }
+
+        .search-box { position: relative; margin-bottom: 15px; }
+        .search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #CBD5E1; font-size: 13px; }
+        .search-box input {
+            width: 100%; padding: 11px 11px 11px 36px; border-radius: 8px;
+            border: 1px solid var(--border); background: #F8FAFC; outline: none; font-size: 14px;
+        }
+        .btn-add-main {
+            width: 100%; padding: 12px; background: var(--accent-blue);
+            color: white; border: none; border-radius: 8px; cursor: pointer;
+            font-weight: 600; font-size: 14px; transition: 0.2s;
+        }
+
+        .stat-line { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; padding: 10px; background: #F8FAFC; border-radius: 8px; }
+        .stat-line i { color: var(--accent-blue); font-size: 14px; opacity: 0.6; }
+
+        /* --- 右侧面板 --- */
+        .right-panel {
+            background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02); display: flex; flex-direction: column; overflow: hidden;
+        }
+        .list-header { padding: 25px 30px 15px; border-bottom: 1px solid #F1F5F9; flex-shrink: 0; }
+
+        #templateContainer { flex-grow: 1; overflow-y: auto; padding: 10px 30px 30px; }
+        #templateContainer::-webkit-scrollbar { width: 6px; }
+        #templateContainer::-webkit-scrollbar-thumb { background: #E2E8F0; border-radius: 10px; }
+
+        .tpl-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 14px 15px; border-bottom: 1px solid #F8FAFC; transition: 0.2s;
+        }
+        .tpl-row:hover { background: #F8FAFC; border-radius: 8px; }
+        .tpl-name { font-size: 15px; font-weight: 500; color: var(--text-main); flex: 1; padding-right: 20px; }
+
+        .tpl-actions { display: flex; gap: 10px; }
+        .act-btn {
+            height: 38px; padding: 0 14px; border-radius: 6px; border: none;
+            display: flex; align-items: center; gap: 6px; cursor: pointer;
+            font-weight: 600; font-size: 13px; transition: 0.2s; white-space: nowrap;
+        }
+        .act-btn i { font-size: 11px; opacity: 0.8; }
+        .act-btn span { font-size: 9px; opacity: 0.5; font-weight: 400; }
+        .btn-view { background: var(--btn-view-bg); color: var(--btn-view-text); }
+        .btn-edit { background: var(--btn-edit-bg); color: var(--btn-edit-text); }
+        .btn-down { background: var(--btn-down-bg); color: var(--btn-down-text); }
+        .btn-del { background: var(--btn-del-bg); color: var(--btn-del-text); }
+
+        /* --- 弹窗 --- */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4);
+            display: none; align-items: center; justify-content: center; z-index: 1000;
+        }
+        .modal-body {
+            background: white; width: 650px; max-height: 90vh; padding: 30px;
+            border-radius: 12px; position: relative; display: flex; flex-direction: column;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+        }
+        .modal-foot { display: flex; gap: 12px; margin-top: 20px; flex-shrink: 0; }
+        .modal-foot button { flex: 1; padding: 11px; border-radius: 6px; cursor: pointer; border: none; font-weight: 600; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-family: inherit;
+        }
+        #tplContent { height: 280px; resize: none; background: #F8FAFC; font-size: 14px; line-height: 1.6; color: #334155; }
+        .content-scroll { overflow-y: auto; flex-grow: 1; padding-right: 5px; }
+    </style>
+</head>
+<body>
+
+    <header class="top-header">
+        <h1>
+            诉讼文书管理
+            <span class="sub-text">/ LITIGATION DOCUMENT MANAGEMENT SYSTEM v3.5</span>
+        </h1>
+        <div class="header-right">
+            <!-- 首页跳转按钮 -->
+            <a href="http://127.0.0.1:8003/model" class="btn-home">
+                <i class="fas fa-home"></i>
+                <span>首页</span>
+            </a>
+            <button class="logout-btn" onclick="logout()">
+                <i class="fas fa-sign-out-alt"></i> 退出系统
+            </button>
+        </div>
+    </header>
+
+    <div class="main-layout">
+        <div class="left-panel">
+            <div class="side-card">
+                <h3 class="card-h3">文书控制台</h3>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="搜索文书名称..." oninput="handleSearch()">
+                </div>
+                <button class="btn-add-main" onclick="openModal()">新增文书模板</button>
+            </div>
+
+            <div class="side-card">
+                <h3 class="card-h3">库量概览</h3>
+                <div class="stat-line">
+                    <i class="fas fa-file-signature"></i>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-sub);">在库总数</div>
+                        <div id="statTotal" style="font-weight: 700; color: var(--deep-navy); font-size: 15px;">0</div>
+                    </div>
+                </div>
+                <div class="stat-line">
+                    <i class="fas fa-history"></i>
+                    <div>
+                        <div style="font-size: 11px; color: var(--text-sub);">最后维护</div>
+                        <div id="statDate" style="font-weight: 700; color: var(--deep-navy); font-size: 14px;">2024-03-17</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <div class="list-header">
+                <h2 id="listTitle">全部诉讼文书</h2>
+                <span style="font-size: 11px; color: var(--text-sub); text-transform: uppercase;">Standardized Legal Templates</span>
+            </div>
+            <div id="templateContainer"></div>
+        </div>
+    </div>
+
+    <!-- 弹窗 -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-body">
+            <h3 id="modalTitle" style="margin-bottom: 20px; color: var(--deep-navy);">详情内容</h3>
+            <div class="content-scroll">
+                <div class="form-group">
+                    <label>文书标题</label>
+                    <input type="text" id="tplName">
+                </div>
+                <div class="form-group">
+                    <label>文书分类</label>
+                    <select id="tplCategory">
+                        <option value="诉讼类">诉讼类</option>
+                        <option value="行政类">行政类</option>
+                        <option value="租赁类">租赁类</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>文书正文内容</label>
+                    <textarea id="tplContent" placeholder="在此录入具体内容..."></textarea>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button style="background:#F1F5F9; color: #64748B;" onclick="closeModal()">返回列表</button>
+                <button id="btnSave" style="background:var(--accent-blue); color:white;" onclick="saveTemplate()">保存并入库</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 诉讼文书全量数据 (21条)
+        const litigationData = [
+            { id: 101, name: '文书模板_001.md', category: '诉讼类', date: '2024-01-05', content: '请求撤销股东大会作出的违法决议...' },
+            { id: 102, name: '文书模板_002.md', category: '租赁类', date: '2024-01-10', content: '因拖欠房租提起的诉讼。' },
+            { id: 103, name: '文书模板_003.md', category: '诉讼类', date: '2024-01-12', content: '原告声明放弃对被告某某的索赔。' },
+            { id: 104, name: '文书模板_004.md', category: '行政类', date: '2024-01-15', content: '本单位承诺过去五年无行政处罚。' },
+            { id: 105, name: '文书模板_005.md', category: '诉讼类', date: '2024-02-01', content: '对拘留决定不服提出复议。' },
+            { id: 106, name: '文书模板_006.md', category: '诉讼类', date: '2024-02-05', content: '执行程序复议申请。' },
+            { id: 107, name: '文书模板_007.md', category: '诉讼类', date: '2024-02-08', content: '对财产冻结不服提出复议。' },
+            { id: 108, name: '文书模板_008.md', category: '诉讼类', date: '2024-02-10', content: '回避申请复议状。' },
+            { id: 109, name: '文书模板_009.md', category: '诉讼类', date: '2024-02-15', content: '因投放广告产生的违约金索赔。' },
+            { id: 110, name: '文书模板_010.md', category: '诉讼类', date: '2024-02-18', content: '对债权金额存有异议的书面说明。' },
+            { id: 111, name: '文书模板_011.md', category: '诉讼类', date: '2024-02-20', content: '认为应由被告住所地法院管辖。' },
+            { id: 112, name: '文书模板_012.md', category: '诉讼类', date: '2024-02-22', content: '案情复杂，申请转简易程序。' },
+            { id: 113, name: '文书模板_013.md', category: '诉讼类', date: '2024-02-25', content: '认为应转为普通程序审理。' },
+            { id: 114, name: '文书模板_014.md', category: '诉讼类', date: '2024-03-01', content: '本人已深刻认识错误，愿具结悔过。' },
+            { id: 115, name: '文书模板_015.md', category: '行政类', date: '2024-03-03', content: '某某单位关于支持起诉的正式书面意见。' },
+            { id: 116, name: '文书模板_016.md', category: '诉讼类', date: '2024-03-05', content: '本人因故无法到庭，现出具书面意见。' },
+            { id: 117, name: '文书模板_017.md', category: '诉讼类', date: '2024-03-08', content: '关于房屋买卖违约及过户的起诉状。' },
+            { id: 118, name: '文书模板_018.md', category: '诉讼类', date: '2024-03-10', content: '标准格式的通用民事起诉状。' },
+            { id: 119, name: '文书模板_019.md', category: '诉讼类', date: '2024-03-12', content: '刑事自诉案件的起诉要求与理由。' },
+            { id: 120, name: '文书模板_020.md', category: '诉讼类', date: '2024-03-15', content: '关于婚姻存续及财产分割的诉讼声明。' },
+            { id: 121, name: '文书模板_021.md', category: '诉讼类', date: '2024-03-16', content: '针对受诉法院管辖权限的异议申请。' }
+        ];
+
+        let editId = null;
+
+        function logout() {
+            if(confirm("是否退出系统？")) {
+                window.location.href = "http://127.0.0.1:5011/";
+            }
+        }
+
+        function renderTemplates(data = litigationData) {
+            const container = document.getElementById('templateContainer');
+            document.getElementById('statTotal').innerText = data.length;
+            if(data.length > 0 && data[0].date) {
+                document.getElementById('statDate').innerText = data[0].date;
+            }
+            container.innerHTML = data.map(tpl => `
+                <div class="tpl-row">
+                    <div class="tpl-name">${tpl.name}</div>
+                    <div class="tpl-actions">
+                        <button class="act-btn btn-view" onclick="openModal(${tpl.id}, true)">查看 <span>VIEW</span></button>
+                        <button class="act-btn btn-edit" onclick="openModal(${tpl.id}, false)">编辑 <span>EDIT</span></button>
+                        <button class="act-btn btn-down" onclick="downloadTpl(${tpl.id})">下载 <span>DOWN</span></button>
+                        <button class="act-btn btn-del" onclick="deleteTpl(${tpl.id})">删除 <span>DEL</span></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function openModal(id = null, isView = false) {
+            editId = id;
+            const modal = document.getElementById('modalOverlay');
+            const btnSave = document.getElementById('btnSave');
+            const fields = [document.getElementById('tplName'), document.getElementById('tplCategory'), document.getElementById('tplContent')];
+            modal.style.display = 'flex';
+            btnSave.style.display = isView ? 'none' : 'block';
+            if(id) {
+                const t = litigationData.find(i => i.id === id);
+                document.getElementById('modalTitle').innerText = isView ? "文书详情内容" : "编辑文书模板";
+                fields[0].value = t.name; fields[1].value = t.category; fields[2].value = t.content;
+                fields.forEach(f => f.disabled = isView);
+            } else {
+                document.getElementById('modalTitle').innerText = "新建文书模板";
+                fields.forEach(f => { f.value = ''; f.disabled = false; });
+            }
+        }
+
+        function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+
+        function saveTemplate() {
+            const name = document.getElementById('tplName').value;
+            const content = document.getElementById('tplContent').value;
+            if(!name || !content) return alert("标题和正文不能为空");
+            if(editId) {
+                const idx = litigationData.findIndex(i => i.id === editId);
+                litigationData[idx] = { ...litigationData[idx], name, category: document.getElementById('tplCategory').value, content };
+            } else {
+                litigationData.unshift({ id: Date.now(), name, category: document.getElementById('tplCategory').value, content, date: new Date().toISOString().split('T')[0] });
+            }
+            closeModal(); renderTemplates();
+        }
+
+        function downloadTpl(id) {
+            const t = litigationData.find(i => i.id === id);
+            const blob = new Blob([t.content], { type: "text/plain;charset=utf-8" });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob); a.download = t.name; a.click();
+        }
+
+        function deleteTpl(id) {
+            if(confirm('确定要从系统中永久移除此模板吗？')) {
+                const idx = litigationData.findIndex(i => i.id === id);
+                litigationData.splice(idx, 1);
+                renderTemplates();
+            }
+        }
+
+        function handleSearch() {
+            const val = document.getElementById('searchInput').value.toLowerCase();
+            renderTemplates(litigationData.filter(t => t.name.toLowerCase().includes(val)));
+        }
+
+        window.onload = () => renderTemplates();
+    </script>
+</body>
+</html>

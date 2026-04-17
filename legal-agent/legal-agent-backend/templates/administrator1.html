@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>管理员端 - 修改密码</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 商务蓝重构色系 */
+            --accent-blue: #2563EB;
+            --deep-navy: #1E3E7E;
+            --color-success: #00B42A;
+            --color-warning: #FF7D00;
+            --color-error: #F53F3F;
+            --text-primary: #1D2129;
+            --text-secondary: #4E5969;
+            --border-color: #C9CDD4;
+            --bg-color: #F2F3F5;
+            --card-bg: #FFFFFF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Noto Sans SC', sans-serif;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 50%, #EBF2FA 0%, var(--bg-color) 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #particles-js {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.8;
+        }
+
+        .reset-card {
+            background-color: var(--card-bg);
+            width: 100%;
+            max-width: 440px;
+            padding: 2rem 3rem;
+            border-radius: 12px;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 10px 40px rgba(29, 33, 41, 0.08);
+            border-top: 4px solid var(--accent-blue);
+            border-bottom: 1px solid var(--border-color);
+            border-left: 1px solid var(--border-color);
+            border-right: 1px solid var(--border-color);
+            animation: cardEntrance 0.5s ease-out forwards;
+        }
+
+        @keyframes cardEntrance {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header h1 {
+            color: var(--deep-navy);
+            font-size: 1.5rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-header p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        .form-group label {
+            display: block;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            margin-bottom: 0.4rem;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-icon {
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            fill: none;
+            stroke: var(--text-secondary);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: all 0.3s ease;
+            z-index: 2;
+        }
+
+        .icon-left { left: 1rem; }
+
+        .icon-eye {
+            right: 1rem;
+            cursor: pointer;
+            stroke: var(--text-secondary);
+        }
+
+        .icon-eye:hover { stroke: var(--accent-blue); }
+
+        .input-wrapper input {
+            width: 100%;
+            padding: 0.8rem 2.8rem 0.8rem 2.8rem;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper input[readonly] {
+            background-color: var(--bg-color);
+            color: var(--text-secondary);
+            border-color: var(--border-color);
+            cursor: not-allowed;
+        }
+
+        .input-wrapper input[readonly] ~ .icon-left {
+            stroke: var(--text-secondary);
+            opacity: 0.6;
+        }
+
+        .input-wrapper input:focus:not([readonly]) {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+            background-color: #ffffff;
+        }
+
+        .input-wrapper input:focus:not([readonly]) ~ .icon-left {
+            stroke: var(--accent-blue);
+        }
+
+        .password-strength-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 0.5rem;
+            height: 14px;
+        }
+
+        .password-strength {
+            flex: 1;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-right: 10px;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0;
+            background-color: var(--color-error); /* 默认极弱色 */
+            transition: width 0.4s ease, background-color 0.4s ease;
+        }
+
+        .password-hint {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            width: 45px;
+            text-align: right;
+            transition: color 0.3s;
+        }
+
+        .alert-box {
+            display: none;
+            background-color: rgba(245, 63, 63, 0.08);
+            border: 1px solid rgba(245, 63, 63, 0.2);
+            color: var(--color-error);
+            padding: 0.7rem;
+            border-radius: 8px;
+            margin-bottom: 1.2rem;
+            font-size: 0.85rem;
+            text-align: center;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.9rem;
+            margin-top: 0.5rem;
+            background-color: var(--accent-blue);
+            color: #FFFFFF;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover:not(:disabled) {
+            background-color: #1D4ED8;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+        }
+
+        .btn-submit:disabled {
+            background-color: var(--border-color);
+            color: var(--card-bg);
+            cursor: not-allowed;
+        }
+
+        .card-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid var(--bg-color);
+        }
+
+        .link-text {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: color 0.3s;
+        }
+
+        .link-text:hover { color: var(--accent-blue); }
+    </style>
+</head>
+<body>
+
+<div id="particles-js"></div>
+
+<div class="reset-card">
+    <div class="card-header">
+        <h1>安全设置中心</h1>
+        <p>定期修改密码，保障系统数据安全</p>
+    </div>
+
+    <div class="alert-box" id="alertBox"></div>
+
+    <form id="resetForm" onsubmit="return false;">
+        <div class="form-group">
+            <label>当前操作账号</label>
+            <div class="input-wrapper">
+                <input type="text" id="currentUser" readonly value="正在核实身份...">
+                <svg class="input-icon icon-left" viewBox="0 0 24 24">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="currentPassword">原登录密码</label>
+            <div class="input-wrapper">
+                <input type="password" id="currentPassword" placeholder="请输入当前使用的密码" required>
+                <svg class="input-icon icon-left" viewBox="0 0 24 24">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <svg class="input-icon icon-eye" viewBox="0 0 24 24" onclick="toggleVis('currentPassword', this)">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 0.8rem;">
+            <label for="newPassword">新登录密码</label>
+            <div class="input-wrapper">
+                <input type="password" id="newPassword" placeholder="请输入新密码 (不少于6位)" required>
+                <svg class="input-icon icon-left" viewBox="0 0 24 24">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <svg class="input-icon icon-eye" viewBox="0 0 24 24" onclick="toggleVis('newPassword', this)">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </div>
+            <div class="password-strength-container">
+                <div class="password-strength">
+                    <div class="password-strength-bar" id="strengthBar"></div>
+                </div>
+                <div class="password-hint" id="strengthText">极弱</div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="confirmPassword">确认新密码</label>
+            <div class="input-wrapper">
+                <input type="password" id="confirmPassword" placeholder="请再次输入新密码" required>
+                <svg class="input-icon icon-left" viewBox="0 0 24 24">
+                    <polyline points="9 11 12 14 22 4"></polyline>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+                <svg class="input-icon icon-eye" viewBox="0 0 24 24" onclick="toggleVis('confirmPassword', this)">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+            </div>
+        </div>
+
+        <button type="button" class="btn-submit" id="submitBtn" onclick="submitResetForm()">
+            <span id="btnText">确认修改</span>
+        </button>
+
+        <div class="card-footer">
+            <a href="/" class="link-text">← 返回登录</a>
+        </div>
+    </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/particles.js/2.0.0/particles.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        particlesJS('particles-js', {
+            "particles": {
+                "number": { "value": 45, "density": { "enable": true, "value_area": 800 } },
+                "color": { "value": "#2563EB" },
+                "shape": { "type": "circle" },
+                "opacity": { "value": 0.2, "random": false },
+                "size": { "value": 2.5, "random": true },
+                "line_linked": { "enable": true, "distance": 180, "color": "#2563EB", "opacity": 0.15, "width": 1 },
+                "move": { "enable": true, "speed": 1, "direction": "none", "random": true, "out_mode": "out" }
+            },
+            "interactivity": {
+                "detect_on": "canvas",
+                "events": { "onhover": { "enable": false }, "onclick": { "enable": false }, "resize": true }
+            },
+            "retina_detect": true
+        });
+
+        fetch('/get_admin_info')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('currentUser').value = data.data.username;
+                } else {
+                    document.getElementById('currentUser').value = "未验证身份";
+                }
+            })
+            .catch(error => {
+                document.getElementById('currentUser').value = "信息获取失败";
+            });
+    });
+
+    function toggleVis(inputId, iconElement) {
+        const pwdInput = document.getElementById(inputId);
+        if (pwdInput.type === 'password') {
+            pwdInput.type = 'text';
+            iconElement.innerHTML = `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line>`;
+            iconElement.style.stroke = 'var(--accent-blue)';
+        } else {
+            pwdInput.type = 'password';
+            iconElement.innerHTML = `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>`;
+            iconElement.style.stroke = 'var(--text-secondary)';
+        }
+    }
+
+    /* 业务重构逻辑：密码强度颜色应用新的警告/成功色系规范 */
+    document.getElementById('newPassword').addEventListener('input', function() {
+        const pwd = this.value;
+        const bar = document.getElementById('strengthBar');
+        const text = document.getElementById('strengthText');
+
+        let strength = 0;
+        if (pwd.length > 0) strength += 1;
+        if (pwd.length >= 6) strength += 1;
+        if (pwd.match(/[a-zA-Z]/) && pwd.match(/[0-9]/)) strength += 1;
+        if (pwd.match(/[^a-zA-Z0-9]/)) strength += 1;
+
+        if (strength === 0) {
+            bar.style.width = '0%';
+            bar.style.backgroundColor = 'var(--color-error)';
+            text.textContent = '极弱';
+            text.style.color = 'var(--color-error)';
+        } else if (strength === 1 || strength === 2) {
+            bar.style.width = '33%';
+            bar.style.backgroundColor = 'var(--color-error)';
+            text.textContent = '较弱';
+            text.style.color = 'var(--color-error)';
+        } else if (strength === 3) {
+            bar.style.width = '66%';
+            bar.style.backgroundColor = 'var(--color-warning)';
+            text.textContent = '中等';
+            text.style.color = 'var(--color-warning)';
+        } else if (strength >= 4) {
+            bar.style.width = '100%';
+            bar.style.backgroundColor = 'var(--color-success)';
+            text.textContent = '安全';
+            text.style.color = 'var(--color-success)';
+        }
+    });
+
+    function showError(msg) {
+        const alertBox = document.getElementById('alertBox');
+        alertBox.textContent = msg;
+        alertBox.style.display = 'block';
+
+        const card = document.querySelector('.reset-card');
+        card.style.transform = 'translateX(-5px)';
+        setTimeout(() => card.style.transform = 'translateX(5px)', 50);
+        setTimeout(() => card.style.transform = 'translateX(-5px)', 100);
+        setTimeout(() => card.style.transform = 'translateX(0)', 150);
+    }
+
+    function submitResetForm() {
+        const currentPassword = document.getElementById('currentPassword').value;
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const submitBtn = document.getElementById('submitBtn');
+        const btnText = document.getElementById('btnText');
+
+        document.getElementById('alertBox').style.display = 'none';
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+            showError("请完整填写所有密码字段！");
+            return;
+        }
+
+        if (newPassword.length < 6) {
+            showError("新密码长度不能少于6位！");
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showError("两次输入的新密码不一致！");
+            return;
+        }
+
+        submitBtn.disabled = true;
+        btnText.textContent = '系统验证中...';
+
+        fetch('/administrator1', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                current_password: currentPassword,
+                new_password: newPassword,
+                confirm_new_password: confirmPassword
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                submitBtn.style.backgroundColor = 'var(--color-success)'; // 成功变绿
+                btnText.textContent = '密码修改成功，即将跳转';
+                setTimeout(() => window.location.href = '/', 1500);
+            } else {
+                showError(data.message || "原密码错误或修改失败，请重试");
+                resetBtn();
+            }
+        })
+        .catch(error => {
+            showError("网络请求异常，请检查连接");
+            resetBtn();
+        });
+
+        function resetBtn() {
+            submitBtn.disabled = false;
+            btnText.textContent = '确认修改';
+        }
+    }
+
+    document.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            submitResetForm();
+        }
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,595 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智审云枢 | 合同风险评估</title>
+    <style>
+        :root {
+            --accent-blue: #2563eb;
+            --deep-navy: #1e3e7e;
+            --bg-body: #f4f7fa;
+            --bg-card: #ffffff;
+            --border: #e2e8f0;
+            --text-main: #334155;
+            --text-sub: #64748b;
+            --muted: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg-body);
+            font-family: "Noto Serif SC", "Microsoft YaHei", serif;
+            color: var(--text-main);
+            min-height: 100vh;
+            padding-bottom: 32px;
+        }
+
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: var(--deep-navy);
+            color: #fff;
+            padding: 16px 5%;
+            box-shadow: 0 8px 20px rgba(30, 62, 126, 0.15);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            color: #fff;
+            text-decoration: none;
+            font-size: 1.4rem;
+            letter-spacing: 2px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-links a {
+            color: rgba(255,255,255,0.92);
+            text-decoration: none;
+            font-size: 1rem;
+        }
+
+        .hero {
+            max-width: 1280px;
+            margin: 32px auto 24px;
+            padding: 0 20px;
+        }
+
+        .hero h1 {
+            font-size: 2.2rem;
+            color: var(--deep-navy);
+            margin-bottom: 8px;
+        }
+
+        .hero p {
+            color: var(--text-sub);
+            font-size: 1.05rem;
+        }
+
+        .main-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 360px 1fr;
+            gap: 24px;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.04);
+        }
+
+        .file-panel {
+            position: sticky;
+            top: 92px;
+            padding: 28px;
+        }
+
+        .file-panel h2,
+        .form-panel h2 {
+            color: var(--deep-navy);
+            font-size: 1.35rem;
+            margin-bottom: 10px;
+        }
+
+        .panel-desc {
+            color: var(--text-sub);
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            display: none;
+        }
+
+        .file-picker,
+        .primary-btn,
+        .secondary-btn {
+            width: 100%;
+            border: none;
+            border-radius: 999px;
+            padding: 13px 18px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .file-picker,
+        .secondary-btn {
+            background: #fff;
+            border: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .file-picker:hover,
+        .secondary-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, var(--accent-blue), var(--deep-navy));
+            color: #fff;
+            margin-top: 12px;
+            box-shadow: 0 8px 18px rgba(37, 99, 235, 0.22);
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .selected-file,
+        .file-note {
+            font-size: 0.92rem;
+            color: var(--text-sub);
+            margin-top: 10px;
+            line-height: 1.6;
+            word-break: break-all;
+        }
+
+        .form-panel {
+            padding: 28px;
+        }
+
+        .form-section {
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-section:last-of-type {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .form-section h3 {
+            color: var(--deep-navy);
+            margin-bottom: 14px;
+            font-size: 1.15rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 14px;
+        }
+
+        label {
+            font-size: 0.94rem;
+            color: var(--text-main);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 0.96rem;
+            font-family: inherit;
+            color: var(--text-main);
+            background: #fff;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+        }
+
+        textarea { min-height: 110px; resize: vertical; }
+
+        .error-message {
+            display: none;
+            color: #dc2626;
+            font-size: 0.82rem;
+        }
+
+        .form-group.invalid .error-message { display: block; }
+        .form-group.invalid input,
+        .form-group.invalid select,
+        .form-group.invalid textarea { border-color: #dc2626; }
+
+        .button-group {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.84);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px 36px;
+            text-align: center;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+        }
+
+        .spinner {
+            width: 42px;
+            height: 42px;
+            margin: 0 auto 16px;
+            border: 3px solid #dbeafe;
+            border-top-color: var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @media (max-width: 980px) {
+            .main-container { grid-template-columns: 1fr; }
+            .file-panel { position: static; }
+        }
+
+        @media (max-width: 640px) {
+            .navbar { flex-direction: column; gap: 10px; }
+            .nav-links { gap: 16px; flex-wrap: wrap; justify-content: center; }
+            .hero h1 { font-size: 1.8rem; }
+            .button-group { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar" id="navbar">
+        <a class="logo" href="/">智审云枢</a>
+        <div class="nav-links">
+            <a href="/">风险评估</a>
+            <a href="http://127.0.0.1:5025">诉讼模板</a>
+            <a href="http://127.0.0.1:5006">案例分析</a>
+        </div>
+    </div>
+
+    <div class="hero">
+        <h1>合同风险评估</h1>
+        <p>支持手动填写合同信息，也支持上传合同文件进行自动提取后再评估风险。</p>
+    </div>
+
+    <div class="main-container">
+        <aside class="card file-panel">
+            <h2>文件辅助分析</h2>
+            <p class="panel-desc">上传合同文件后，系统会自动提取合同名称、类型、金额、履约期限、交付内容等信息并回填到表单中。</p>
+            <div class="file-input-wrapper">
+                <input id="contractFile" type="file" accept=".pdf,.docx,.txt,.md">
+                <label class="file-picker" for="contractFile">选择合同文件</label>
+            </div>
+            <div class="selected-file" id="selectedFileName">尚未选择文件</div>
+            <button type="button" class="primary-btn" onclick="analyzeFile()">开始分析文件</button>
+            <div class="file-note">支持格式：PDF / DOCX / TXT / MD</div>
+        </aside>
+
+        <section class="card form-panel">
+            <h2>评估信息表单</h2>
+            <p class="panel-desc">表单字段会参与规则评分和 AI 风险判断，请尽量填写完整。</p>
+
+            <form action="/submit" method="post" onsubmit="return showSubmitAlert()">
+                <div class="form-section">
+                    <h3>基础信息</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="contract_name">合同名称</label>
+                            <input type="text" id="contract_name" name="contract_name" required>
+                            <div class="error-message">请输入合同名称</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="contract_type">合同类型</label>
+                            <select id="contract_type" name="contract_type" required>
+                                <option value="">请选择合同类型</option>
+                                <option value="买卖合同">买卖合同</option>
+                                <option value="租赁合同">租赁合同</option>
+                                <option value="服务合同">服务合同</option>
+                                <option value="赠与合同">赠与合同</option>
+                                <option value="借款合同">借款合同</option>
+                                <option value="保证合同">保证合同</option>
+                                <option value="融资租赁合同">融资租赁合同</option>
+                                <option value="保理合同">保理合同</option>
+                                <option value="承揽合同">承揽合同</option>
+                                <option value="建设工程合同">建设工程合同</option>
+                                <option value="运输合同">运输合同</option>
+                                <option value="技术合同">技术合同</option>
+                                <option value="保管合同">保管合同</option>
+                                <option value="仓储合同">仓储合同</option>
+                                <option value="委托合同">委托合同</option>
+                                <option value="物业服务合同">物业服务合同</option>
+                                <option value="行纪合同">行纪合同</option>
+                                <option value="中介合同">中介合同</option>
+                                <option value="合伙合同">合伙合同</option>
+                                <option value="其他合同">其他合同</option>
+                            </select>
+                            <div class="error-message">请选择合同类型</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="contract_amount">合同金额（元）</label>
+                            <input type="number" id="contract_amount" name="contract_amount" step="0.01" required>
+                            <div class="error-message">请输入有效金额</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="customer_id">客户 ID</label>
+                            <input type="text" id="customer_id" name="customer_id" required>
+                            <div class="error-message">请输入客户 ID</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>履约信息</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="performance_period_start">开始日期</label>
+                            <input type="date" id="performance_period_start" name="performance_period_start" required>
+                            <div class="error-message">请选择开始日期</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="performance_period_end">结束日期</label>
+                            <input type="date" id="performance_period_end" name="performance_period_end" required>
+                            <div class="error-message">请选择结束日期</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="payment_terms">付款方式</label>
+                            <select id="payment_terms" name="payment_terms" required>
+                                <option value="">请选择付款方式</option>
+                                <option value="预付款">预付款</option>
+                                <option value="分期付款">分期付款</option>
+                                <option value="货到付款">货到付款</option>
+                                <option value="按月支付">按月支付</option>
+                                <option value="服务完成后付款">服务完成后付款</option>
+                                <option value="按合同约定支付">按合同约定支付</option>
+                                <option value="其他">其他</option>
+                            </select>
+                            <div class="error-message">请选择付款方式</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="deliverables">交付内容 / 服务内容</label>
+                        <textarea id="deliverables" name="deliverables" required></textarea>
+                        <div class="error-message">请填写交付或服务内容</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="deliverables_complexity">交付复杂度</label>
+                        <select id="deliverables_complexity" name="deliverables_complexity" required>
+                            <option value="">请选择复杂度</option>
+                            <option value="简单">简单</option>
+                            <option value="中等">中等</option>
+                            <option value="复杂">复杂</option>
+                        </select>
+                        <div class="error-message">请选择交付复杂度</div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>法律条款</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="breach_clauses">违约责任</label>
+                            <select id="breach_clauses" name="breach_clauses" required>
+                                <option value="">请选择违约责任</option>
+                                <option value="未明确违约责任">未明确违约责任</option>
+                                <option value="中等违约责任">中等违约责任</option>
+                                <option value="高额违约责任">高额违约责任</option>
+                            </select>
+                            <div class="error-message">请选择违约责任</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="dispute_resolution">争议解决方式</label>
+                            <select id="dispute_resolution" name="dispute_resolution" required>
+                                <option value="">请选择争议解决方式</option>
+                                <option value="协商">协商</option>
+                                <option value="仲裁">仲裁</option>
+                                <option value="诉讼">诉讼</option>
+                            </select>
+                            <div class="error-message">请选择争议解决方式</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h3>风险因子</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="party_a_credit_rating">甲方信用评级</label>
+                            <select id="party_a_credit_rating" name="party_a_credit_rating" required>
+                                <option value="">请选择信用评级</option>
+                                <option value="AAA">AAA</option>
+                                <option value="AA">AA</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                            </select>
+                            <div class="error-message">请选择甲方信用评级</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="party_b_credit_rating">乙方信用评级</label>
+                            <select id="party_b_credit_rating" name="party_b_credit_rating" required>
+                                <option value="">请选择信用评级</option>
+                                <option value="AAA">AAA</option>
+                                <option value="AA">AA</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                            </select>
+                            <div class="error-message">请选择乙方信用评级</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="market_conditions">市场情况</label>
+                            <select id="market_conditions" name="market_conditions" required>
+                                <option value="">请选择市场情况</option>
+                                <option value="稳定">稳定</option>
+                                <option value="波动">波动</option>
+                                <option value="不稳定">不稳定</option>
+                            </select>
+                            <div class="error-message">请选择市场情况</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="industry_trends">行业趋势</label>
+                            <select id="industry_trends" name="industry_trends" required>
+                                <option value="">请选择行业趋势</option>
+                                <option value="上升">上升</option>
+                                <option value="平稳">平稳</option>
+                                <option value="下降">下降</option>
+                            </select>
+                            <div class="error-message">请选择行业趋势</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="primary-btn" style="width:auto;min-width:180px;">提交评估</button>
+                </div>
+            </form>
+        </section>
+    </div>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p>正在分析合同文件，请稍候...</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('contractFile').addEventListener('change', function (e) {
+            const fileName = e.target.files[0] ? e.target.files[0].name : '尚未选择文件';
+            document.getElementById('selectedFileName').textContent = fileName;
+        });
+
+        function analyzeFile() {
+            const fileInput = document.getElementById('contractFile');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('请先选择要分析的合同文件。');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            document.getElementById('loadingOverlay').style.display = 'flex';
+
+            fetch('/analyze_contract_file', {
+                method: 'POST',
+                body: formData
+            })
+                .then((response) => response.json())
+                .then((data) => {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    if (data.status === 'success') {
+                        fillFormWithExtractedData(data.data || {});
+                        alert('文件分析完成，已自动回填可识别字段。');
+                    } else {
+                        alert('文件分析失败：' + (data.message || '未知错误'));
+                    }
+                })
+                .catch((error) => {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                    console.error(error);
+                    alert('文件上传或分析失败，请稍后重试。');
+                });
+        }
+
+        function setSelectIfExists(selectId, value) {
+            if (!value) return;
+            const select = document.getElementById(selectId);
+            const optionExists = Array.from(select.options).some((option) => option.value === value);
+            if (optionExists) select.value = value;
+        }
+
+        function fillFormWithExtractedData(data) {
+            if (data.contract_name) document.getElementById('contract_name').value = data.contract_name;
+            if (data.contract_amount) document.getElementById('contract_amount').value = data.contract_amount;
+            if (data.customer_id) document.getElementById('customer_id').value = data.customer_id;
+            if (data.start_date) document.getElementById('performance_period_start').value = data.start_date;
+            if (data.end_date) document.getElementById('performance_period_end').value = data.end_date;
+            if (data.deliverables) document.getElementById('deliverables').value = data.deliverables;
+
+            setSelectIfExists('contract_type', data.contract_type);
+            setSelectIfExists('payment_terms', data.payment_terms);
+            setSelectIfExists('deliverables_complexity', data.deliverables_complexity);
+            setSelectIfExists('breach_clauses', data.breach_clauses);
+            setSelectIfExists('dispute_resolution', data.dispute_resolution);
+            setSelectIfExists('party_a_credit_rating', data.party_a_credit_rating);
+            setSelectIfExists('party_b_credit_rating', data.party_b_credit_rating);
+            setSelectIfExists('market_conditions', data.market_conditions);
+            setSelectIfExists('industry_trends', data.industry_trends);
+        }
+
+        function showSubmitAlert() {
+            let isValid = true;
+            document.querySelectorAll('[required]').forEach((field) => {
+                const group = field.closest('.form-group');
+                if (!field.value.trim()) {
+                    group.classList.add('invalid');
+                    isValid = false;
+                } else {
+                    group.classList.remove('invalid');
+                }
+            });
+
+            const startValue = document.getElementById('performance_period_start').value;
+            const endValue = document.getElementById('performance_period_end').value;
+            if (startValue && endValue && new Date(startValue) > new Date(endValue)) {
+                alert('结束日期不能早于开始日期。');
+                isValid = false;
+            }
+            return isValid;
+        }
+
+        document.querySelectorAll('input, select, textarea').forEach((el) => {
+            el.addEventListener('input', function () {
+                const group = this.closest('.form-group');
+                if (group && this.value.trim()) {
+                    group.classList.remove('invalid');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

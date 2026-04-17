@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户管理系统 - 用户信息查询</title>
+    <link href="https://unpkg.com/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        :root {
+            --main-bg: linear-gradient(135deg, #9dbfff 0%, #709dff 100%);
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --primary-blue: #007bff;
+            --accent-blue: #4a90e2;
+            --title-navy: #1a2a4a;
+            --text-dark: #1a2a4a;
+            --border-radius: 20px;
+        }
+
+        body {
+            background: var(--main-bg);
+            background-attachment: fixed;
+            font-family: 'Segoe UI', 'PingFang SC', sans-serif;
+            color: var(--text-dark);
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.4) !important;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.8rem 2rem;
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            color: var(--primary-blue) !important;
+            letter-spacing: 1px;
+        }
+
+        .btn-logout {
+            border: 1px solid var(--primary-blue) !important;
+            color: var(--primary-blue) !important;
+            background: transparent !important;
+            border-radius: 10px;
+            transition: all 0.3s;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .btn-logout:hover {
+            background: var(--primary-blue) !important;
+            color: #fff !important;
+            transform: translateY(-2px);
+        }
+
+        .main-container {
+            padding: 3rem 2rem;
+            animation: fadeIn 0.8s ease;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            border-radius: var(--border-radius);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 25px; left: 25px;
+            width: 40px; height: 40px;
+            border-top: 4px solid var(--primary-blue);
+            border-left: 4px solid var(--primary-blue);
+            z-index: 10;
+            opacity: 0.6;
+        }
+
+        .card-header {
+            background: transparent !important;
+            border: none;
+            padding: 3rem 2rem 1rem;
+            text-align: center;
+        }
+
+        .card-title {
+            font-size: 3rem !important;
+            letter-spacing: 12px;
+            color: var(--title-navy) !important;
+            font-weight: 900;
+            margin-bottom: 15px;
+        }
+
+        .status-indicator {
+            font-size: 14px;
+            color: #66768e;
+            letter-spacing: 4px;
+            font-weight: 600;
+        }
+        .status-dot {
+            display: inline-block;
+            width: 10px; height: 10px;
+            background: var(--primary-blue);
+            border-radius: 50%;
+            margin-right: 10px;
+            box-shadow: 0 0 10px var(--primary-blue);
+            animation: blink 2s infinite;
+        }
+
+        .table-container {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .table thead th {
+            background: transparent !important;
+            color: var(--primary-blue);
+            border-bottom: 2px solid rgba(0, 123, 255, 0.2) !important;
+            font-weight: 700;
+            padding: 15px;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue) !important;
+            border: none !important;
+            border-radius: 12px;
+            padding: 10px 25px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+        }
+
+        .btn-edit-custom {
+            border: 1px solid var(--primary-blue) !important;
+            color: var(--primary-blue) !important;
+            background: #fff !important;
+            border-radius: 8px;
+        }
+        .btn-delete-custom {
+            border: 1px solid #e53e3e !important;
+            color: #e53e3e !important;
+            background: transparent !important;
+            border-radius: 8px;
+        }
+        .btn-delete-custom:hover {
+            background: #e53e3e !important;
+            color: #fff !important;
+        }
+
+        .search-wrapper {
+            max-width: 400px;
+        }
+        .search-wrapper .form-control {
+            border-radius: 10px;
+            border: 1px solid rgba(0, 123, 255, 0.2);
+            padding-left: 40px;
+            background: rgba(255, 255, 255, 0.8);
+        }
+        .search-wrapper .fa-search {
+            position: absolute;
+            left: 15px;
+            top: 12px;
+            color: var(--primary-blue);
+            z-index: 5;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; }
+        }
+
+        .footer-info {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 12px;
+            letter-spacing: 4px;
+            color: #718096;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-shield-halved me-2"></i>用户管理系统
+        </a>
+        <div class="navbar-nav ms-auto d-flex flex-row align-items-center">
+            <button class="btn btn-sm btn-primary ms-3" onclick="showAddModal()">
+                <i class="fas fa-plus me-1"></i>添加用户
+            </button>
+            <div class="ms-4 d-flex align-items-center">
+                <div class="rounded-circle bg-white d-flex align-items-center justify-content-center me-2 shadow-sm" style="width: 35px; height: 35px;">
+                    <i class="fas fa-user text-primary"></i>
+                </div>
+                <span class="fw-bold">管理员</span>
+            </div>
+            <a href="http://127.0.0.1:8003/" class="btn btn-sm btn-logout ms-3">
+                <i class="fas fa-home me-1"></i>返回管理中枢
+            </a>
+            <button class="btn btn-sm btn-logout ms-2" onclick="confirmLogout()">
+                <i class="fas fa-sign-out-alt me-1"></i>退出系统
+            </button>
+        </div>
+    </div>
+</nav>
+
+<div class="main-container">
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">用户信息查询</h2>
+            <div class="status-indicator">
+                <span class="status-dot"></span> SYSTEM OPERATIONAL &nbsp; | &nbsp; ENCRYPTION: AES-256
+            </div>
+        </div>
+        <div class="card-body p-5">
+            <div class="row g-3 mb-4 align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-list-ul me-2 text-primary"></i>
+                        <h5 class="mb-0 fw-bold">用户信息列表</h5>
+                    </div>
+                    <div class="search-wrapper position-relative mt-3">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" class="form-control shadow-none" placeholder="输入用户ID或用户名搜索..." onkeyup="handleSearch()">
+                    </div>
+                </div>
+                <div class="col-md-6 text-end">
+                    <button class="btn btn-primary shadow-sm" onclick="showAddModal()">
+                        <i class="fas fa-user-plus me-2"></i>注册新用户
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                              <tr>
+                                <th>ID</th>
+                                <th>用户名</th>
+                                <th>邮箱地址</th>
+                                <th>注册日期</th>
+                                <th class="text-center">操作指令</th>
+                              </tr>
+                        </thead>
+                        <tbody id="userTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="footer-info">
+                © 2026 COMMAND INTERFACE V2.0
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 添加用户弹窗 -->
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 20px;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold">添加新节点</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-4">
+                <input type="text" id="addName" class="form-control mb-3" placeholder="用户名">
+                <input type="email" id="addEmail" class="form-control" placeholder="电子邮箱">
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-primary" onclick="addUser()">确认添加</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://unpkg.com/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    let users = [
+        { id: "#1001", name: "Admin_Alpha", email: "alpha@system.com", date: "2025-03-14" },
+        { id: "#1002", name: "User_Beta", email: "beta@node.net", date: "2025-03-15" }
+    ];
+
+    function renderTable(dataList = users) {
+        let html = "";
+        dataList.forEach((user) => {
+            html += `
+                <tr class="animate__animated animate__fadeIn">
+                    <td><span class="badge bg-light text-dark border">${user.id}</span></td>
+                    <td><span class="fw-bold text-primary">${user.name}</span></td>
+                    <td>${user.email}</td>
+                    <td>${user.date}</td>
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-edit-custom me-2" onclick="editUser('${user.id}')">编辑</button>
+                        <button class="btn btn-sm btn-delete-custom" onclick="deleteUser('${user.id}')">注销</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        if(dataList.length === 0) {
+            html = `<tr><td colspan="5" class="text-center py-4 text-muted">未找到匹配的用户节点</td></tr>`;
+        }
+        $('#userTableBody').html(html);
+    }
+
+    function handleSearch() {
+        const query = $('#searchInput').val().toLowerCase();
+        const filtered = users.filter(user =>
+            user.id.toLowerCase().includes(query) ||
+            user.name.toLowerCase().includes(query)
+        );
+        renderTable(filtered);
+    }
+
+    function deleteUser(id) {
+        if(confirm("确定要强制注销该用户节点吗？")) {
+            users = users.filter(u => u.id !== id);
+            handleSearch();
+        }
+    }
+
+    function editUser(id) {
+        const index = users.findIndex(u => u.id === id);
+        if (index === -1) return;
+        const user = users[index];
+        const newName = prompt("请输入新的用户名:", user.name);
+        const newEmail = prompt("请输入新的邮箱:", user.email);
+        if (newName && newEmail) {
+            users[index].name = newName;
+            users[index].email = newEmail;
+            handleSearch();
+        }
+    }
+
+    function showAddModal() {
+        new bootstrap.Modal($('#addModal')).show();
+    }
+
+    function addUser() {
+        const name = $('#addName').val();
+        const email = $('#addEmail').val();
+        if(name && email) {
+            const lastIdNum = users.length > 0 ? parseInt(users[users.length-1].id.replace('#', '')) : 1000;
+            users.push({
+                id: "#" + (lastIdNum + 1),
+                name: name,
+                email: email,
+                date: new Date().toISOString().split('T')[0]
+            });
+            $('#searchInput').val('');
+            renderTable();
+            bootstrap.Modal.getInstance($('#addModal')).hide();
+            $('#addName').val(''); $('#addEmail').val('');
+        }
+    }
+
+    function confirmLogout() {
+        if(confirm("是否退出系统？")) {
+            window.location.href = "http://127.0.0.1:5011/";
+        }
+    }
+
+    $(document).ready(function() {
+        renderTable();
+    });
+</script>
+</body>
+</html>

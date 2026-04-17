@@ -1,0 +1,110 @@
+/* WelcomePage.css */
+.legal-platform-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 64px);
+  background: transparent;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 主容器 */
+.holographic-content {
+  text-align: center;
+  max-width: 1200px;
+  width: 100%;
+  padding: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* 标题样式 */
+.platform-title {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #1e3e7e; /* 改为深蓝色 */
+  margin-bottom: 1rem;
+}
+
+/* 标题下的蓝色短线 */
+.title-line {
+  width: 48px;
+  height: 4px;
+  background-color: #2563eb;
+  margin: 0 auto 1.5rem;
+  border-radius: 2px;
+}
+
+.sub-text {
+  color: #64748b;
+  font-size: 1.1rem;
+  margin-bottom: 3rem;
+}
+
+/* 卡片网格 */
+.service-matrix {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* 修改卡片为截图中的纯白样式 */
+.service-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  min-height: 240px;
+}
+
+.service-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(30, 62, 126, 0.1);
+  border-color: #2563eb;
+}
+
+/* 图标改为蓝色 */
+.dynamic-icon {
+  font-size: 3.5rem;
+  color: #2563eb;
+  margin-bottom: 1.5rem;
+}
+
+.service-card span {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1e3e7e;
+}
+
+/* 卡片底部装饰小线段 */
+.card-divider {
+  width: 20px;
+  height: 3px;
+  background-color: #e2e8f0;
+  margin-top: 15px;
+  transition: all 0.3s ease;
+  border-radius: 2px;
+}
+
+.service-card:hover .card-divider {
+  width: 40px;
+  background-color: #2563eb;
+}
+
+/* 响应式 */
+@media (max-width: 900px) {
+  .service-matrix {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

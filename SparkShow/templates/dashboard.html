@@ -1,0 +1,621 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>智审云枢 | 合同风险监测看板</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <style>
+        :root {
+            --bg: #eef4fb;
+            --card: rgba(255, 255, 255, 0.78);
+            --border: rgba(255, 255, 255, 0.9);
+            --navy: #17325c;
+            --blue: #2c72ff;
+            --text: #304256;
+            --sub: #6b7d93;
+            --high: #ef4444;
+            --medium: #f59e0b;
+            --low: #22c55e;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+            background: radial-gradient(circle at top left, #ffffff 0%, #dceafd 45%, #c9dcf8 100%);
+            color: var(--text);
+            overflow: hidden;
+        }
+
+        .page-shell {
+            display: grid;
+            grid-template-rows: 72px 54px 1fr 92px;
+            height: 100vh;
+            gap: 14px;
+            padding: 14px;
+        }
+
+        .glass {
+            background: var(--card);
+            border: 1px solid var(--border);
+            backdrop-filter: blur(24px);
+            box-shadow: 0 12px 28px rgba(23, 50, 92, 0.08);
+            border-radius: 18px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 22px;
+        }
+
+        .header h1 {
+            color: var(--navy);
+            font-size: 28px;
+            letter-spacing: 6px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .header-btn,
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 10px 18px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: 0.2s ease;
+        }
+
+        .header-btn.primary,
+        .btn.primary {
+            background: linear-gradient(135deg, var(--blue), var(--navy));
+            color: #fff;
+        }
+
+        .header-btn.secondary,
+        .btn.secondary {
+            background: rgba(255,255,255,0.88);
+            color: var(--blue);
+            border: 1px solid rgba(44, 114, 255, 0.25);
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0 16px;
+            overflow-x: auto;
+        }
+
+        .toolbar select,
+        .toolbar button {
+            flex: 0 0 auto;
+        }
+
+        select {
+            border: 1px solid rgba(44, 114, 255, 0.16);
+            border-radius: 12px;
+            background: rgba(255,255,255,0.92);
+            padding: 9px 12px;
+            color: var(--text);
+            min-width: 128px;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 24% 52% 24%;
+            gap: 14px;
+            min-height: 0;
+        }
+
+        .column {
+            display: grid;
+            gap: 14px;
+            min-height: 0;
+        }
+
+        .card {
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            color: var(--navy);
+            font-size: 15px;
+            font-weight: 700;
+            padding: 14px 18px 10px;
+        }
+
+        .chart-box,
+        .list-box {
+            flex: 1;
+            min-height: 0;
+            padding: 0 10px 10px;
+        }
+
+        .chart-box > div {
+            width: 100%;
+            height: 100%;
+            min-height: 220px;
+        }
+
+        .center-card {
+            min-height: 0;
+        }
+
+        .center-note {
+            text-align: center;
+            color: var(--sub);
+            font-size: 12px;
+            padding: 0 16px 12px;
+        }
+
+        .ranking-list {
+            list-style: none;
+            padding: 0 18px 16px;
+            margin: 0;
+            overflow-y: auto;
+        }
+
+        .ranking-item {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(23, 50, 92, 0.08);
+            font-size: 13px;
+        }
+
+        .bottom-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+
+        .stat-card {
+            padding: 16px 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .stat-card p {
+            color: var(--sub);
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card h2 {
+            color: var(--navy);
+            font-size: 28px;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.32);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20;
+        }
+
+        .modal-content {
+            width: min(1100px, 92vw);
+            height: min(720px, 86vh);
+            background: rgba(255,255,255,0.96);
+            border-radius: 20px;
+            padding: 22px;
+            box-shadow: 0 30px 60px rgba(15, 23, 42, 0.18);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        .modal-head h3 {
+            color: var(--navy);
+            font-size: 20px;
+        }
+
+        .modal-table-wrap {
+            overflow: auto;
+            border: 1px solid rgba(23, 50, 92, 0.08);
+            border-radius: 14px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            border-bottom: 1px solid rgba(23, 50, 92, 0.08);
+            text-align: left;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            background: #eff6ff;
+            color: var(--navy);
+        }
+
+        .risk-low { color: var(--low); font-weight: 700; }
+        .risk-medium { color: var(--medium); font-weight: 700; }
+        .risk-high { color: var(--high); font-weight: 700; }
+
+        @media (max-width: 1200px) {
+            .main-grid { grid-template-columns: 1fr; overflow-y: auto; }
+            .page-shell { grid-template-rows: 72px 54px 1fr auto; overflow: auto; }
+            .bottom-bar { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell">
+        <header class="header glass">
+            <h1>合同风险监测看板</h1>
+            <div class="header-actions">
+                <a class="header-btn secondary" href="http://127.0.0.1:8003/">返回管理中枢</a>
+                <button class="header-btn primary" onclick="logout()">退出系统</button>
+            </div>
+        </header>
+
+        <div class="toolbar glass">
+            <select id="timeRange"><option value="all">全部时间</option><option value="7days">近 7 天</option><option value="30days">近 30 天</option><option value="90days">近 90 天</option><option value="1year">近 1 年</option></select>
+            <select id="contractType"><option value="all">全部合同类型</option></select>
+            <select id="riskLevel"><option value="all">全部风险等级</option><option value="低风险">低风险</option><option value="中风险">中风险</option><option value="高风险">高风险</option></select>
+            <select id="amountRange"><option value="all">全部金额区间</option><option value="low">10 万以下</option><option value="medium">10 万 - 50 万</option><option value="high">50 万以上</option></select>
+            <select id="partyACredit"><option value="all">甲方信用等级</option><option value="AAA">AAA</option><option value="AA">AA</option><option value="A">A</option><option value="B">B</option><option value="C">C</option></select>
+            <select id="partyBCredit"><option value="all">乙方信用等级</option><option value="AAA">AAA</option><option value="AA">AA</option><option value="A">A</option><option value="B">B</option><option value="C">C</option></select>
+            <button class="btn primary" onclick="applyFilters()">应用筛选</button>
+            <button class="btn secondary" onclick="resetFilters()">重置筛选</button>
+        </div>
+
+        <div class="main-grid">
+            <div class="column">
+                <section class="card glass">
+                    <div class="card-title">风险等级分布</div>
+                    <div class="chart-box"><div id="riskDistChart"></div></div>
+                </section>
+                <section class="card glass">
+                    <div class="card-title">金额区间分布</div>
+                    <div class="chart-box"><div id="amountDistChart"></div></div>
+                </section>
+            </div>
+
+            <div class="column center-card">
+                <section class="card glass" style="height:100%;">
+                    <div class="card-title">合同类型分布</div>
+                    <div class="chart-box"><div id="contractTypeChart"></div></div>
+                    <div class="center-note">点击图形中的合同类型，可查看对应合同明细。</div>
+                </section>
+            </div>
+
+            <div class="column">
+                <section class="card glass">
+                    <div class="card-title">信用等级分布</div>
+                    <div class="chart-box"><div id="creditRatingChart"></div></div>
+                </section>
+                <section class="card glass">
+                    <div class="card-title">高风险趋势</div>
+                    <div class="chart-box"><div id="riskTrendChart"></div></div>
+                </section>
+                <section class="card glass">
+                    <div class="card-title">高风险合同 Top 10</div>
+                    <ul id="rankingList" class="ranking-list"></ul>
+                </section>
+            </div>
+        </div>
+
+        <div class="bottom-bar">
+            <section class="stat-card glass"><p>合同总数</p><h2 id="totalContracts">0</h2></section>
+            <section class="stat-card glass"><p>合同总金额（元）</p><h2 id="totalAmount">0.00</h2></section>
+            <section class="stat-card glass"><p>高风险合同数</p><h2 id="highRiskCount" class="risk-high">0</h2></section>
+            <section class="stat-card glass"><p>平均风险指数</p><h2 id="avgRiskIndex">0.00</h2></section>
+        </div>
+    </div>
+
+    <div id="detailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-head">
+                <h3 id="modalTitle">合同明细</h3>
+                <div>
+                    <button class="btn secondary" onclick="exportData()">导出 CSV</button>
+                    <button class="btn primary" onclick="closeModal()">关闭</button>
+                </div>
+            </div>
+            <div class="modal-table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>合同名称</th>
+                            <th>合同类型</th>
+                            <th>合同金额</th>
+                            <th>甲方信用</th>
+                            <th>乙方信用</th>
+                            <th>风险等级</th>
+                            <th>风险指数</th>
+                            <th>客户 ID</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const charts = {};
+        let currentData = [];
+        let currentDetailType = '';
+
+        function normalizeRiskLevel(level) {
+            const text = String(level || '').trim();
+            if (text === 'Low') return '低风险';
+            if (text === 'Medium') return '中风险';
+            if (text === 'High') return '高风险';
+            return text || '未知';
+        }
+
+        function riskClass(level) {
+            const normalized = normalizeRiskLevel(level);
+            if (normalized === '低风险') return 'risk-low';
+            if (normalized === '中风险') return 'risk-medium';
+            return 'risk-high';
+        }
+
+        function getFilters() {
+            return {
+                timeRange: document.getElementById('timeRange').value,
+                contractType: document.getElementById('contractType').value,
+                riskLevel: document.getElementById('riskLevel').value,
+                amountRange: document.getElementById('amountRange').value,
+                partyACredit: document.getElementById('partyACredit').value,
+                partyBCredit: document.getElementById('partyBCredit').value,
+            };
+        }
+
+        async function fetchStats(filters) {
+            const response = await fetch('/api/risk-stats', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(filters),
+            });
+            return response.json();
+        }
+
+        async function fetchRiskData(filters) {
+            const response = await fetch('/api/risk-data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(filters),
+            });
+            return response.json();
+        }
+
+        function initCharts() {
+            ['riskDistChart', 'amountDistChart', 'contractTypeChart', 'creditRatingChart', 'riskTrendChart'].forEach((id) => {
+                charts[id] = echarts.init(document.getElementById(id));
+            });
+            charts.contractTypeChart.on('click', (params) => showModal(params.name));
+            window.addEventListener('resize', () => Object.values(charts).forEach((chart) => chart.resize()));
+        }
+
+        function renderRiskDistribution(stats) {
+            charts.riskDistChart.setOption({
+                tooltip: { trigger: 'item' },
+                color: ['#22c55e', '#f59e0b', '#ef4444'],
+                series: [{
+                    type: 'pie',
+                    radius: ['45%', '72%'],
+                    label: { formatter: '{b}\n{c}' },
+                    data: [
+                        { name: '低风险', value: stats.risk_distribution?.Low || 0 },
+                        { name: '中风险', value: stats.risk_distribution?.Medium || 0 },
+                        { name: '高风险', value: stats.risk_distribution?.High || 0 },
+                    ],
+                }],
+            });
+        }
+
+        function renderAmountDistribution(stats) {
+            charts.amountDistChart.setOption({
+                tooltip: { trigger: 'axis' },
+                xAxis: { type: 'category', data: ['10 万以下', '10 万 - 50 万', '50 万以上'] },
+                yAxis: { type: 'value' },
+                series: [{
+                    type: 'bar',
+                    barWidth: '42%',
+                    itemStyle: { color: '#2c72ff', borderRadius: [8, 8, 0, 0] },
+                    data: [
+                        stats.amount_distribution?.Low || 0,
+                        stats.amount_distribution?.Medium || 0,
+                        stats.amount_distribution?.High || 0,
+                    ],
+                }],
+            });
+        }
+
+        function renderContractTypeDistribution(stats) {
+            const data = Object.entries(stats.contract_type_distribution || {}).map(([name, value]) => ({ name, value }));
+            charts.contractTypeChart.setOption({
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    label: { formatter: '{b}\n{c}' },
+                    data,
+                }],
+            });
+        }
+
+        function renderCreditDistribution(stats) {
+            charts.creditRatingChart.setOption({
+                tooltip: { trigger: 'item' },
+                series: [{
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    label: { formatter: '{b}\n{c}' },
+                    data: ['AAA', 'AA', 'A', 'B', 'C'].map((name) => ({
+                        name,
+                        value: stats.credit_rating_distribution?.[name] || 0,
+                    })),
+                }],
+            });
+        }
+
+        function renderTrend(data) {
+            const groups = {};
+            data.forEach((item) => {
+                const dateText = String(item.performance_period_start || '').slice(0, 7) || '未知';
+                if (!groups[dateText]) {
+                    groups[dateText] = { low: 0, medium: 0, high: 0 };
+                }
+                const level = normalizeRiskLevel(item.risk_level);
+                if (level === '低风险') groups[dateText].low += 1;
+                else if (level === '中风险') groups[dateText].medium += 1;
+                else groups[dateText].high += 1;
+            });
+            const dates = Object.keys(groups).sort();
+            charts.riskTrendChart.setOption({
+                tooltip: { trigger: 'axis' },
+                legend: { data: ['低风险', '中风险', '高风险'] },
+                xAxis: { type: 'category', data: dates },
+                yAxis: { type: 'value', minInterval: 1 },
+                series: [
+                    { name: '低风险', type: 'line', smooth: true, data: dates.map((date) => groups[date].low), lineStyle: { color: '#22c55e' } },
+                    { name: '中风险', type: 'line', smooth: true, data: dates.map((date) => groups[date].medium), lineStyle: { color: '#f59e0b' } },
+                    { name: '高风险', type: 'line', smooth: true, data: dates.map((date) => groups[date].high), lineStyle: { color: '#ef4444' } },
+                ],
+            });
+        }
+
+        function renderRanking(stats) {
+            const list = document.getElementById('rankingList');
+            const contracts = stats.top_contracts || [];
+            list.innerHTML = contracts.map((item, index) => `
+                <li class="ranking-item">
+                    <span>${index + 1}. ${item.contract_name || '未命名合同'}</span>
+                    <span class="${riskClass(item.risk_level)}">${normalizeRiskLevel(item.risk_level)} / ${Number(item.risk_index || 0).toFixed(2)}</span>
+                </li>
+            `).join('');
+        }
+
+        function renderStats(stats) {
+            const totalContracts = Number(stats.total_contracts || 0);
+            const totalAmount = Number(stats.total_amount || 0);
+            const highCount = Number(stats.risk_distribution?.High || 0);
+            const avgRiskIndex = totalContracts ? ((stats.top_contracts || []).reduce((sum, item) => sum + Number(item.risk_index || 0), 0) / Math.min((stats.top_contracts || []).length || 1, 10)) : 0;
+            document.getElementById('totalContracts').textContent = String(totalContracts);
+            document.getElementById('totalAmount').textContent = totalAmount.toFixed(2);
+            document.getElementById('highRiskCount').textContent = String(highCount);
+            document.getElementById('avgRiskIndex').textContent = avgRiskIndex.toFixed(2);
+        }
+
+        function populateContractTypes(data) {
+            const select = document.getElementById('contractType');
+            const currentValue = select.value;
+            const types = [...new Set(data.map((item) => item.contract_type).filter(Boolean))].sort();
+            select.innerHTML = '<option value="all">全部合同类型</option>' + types.map((type) => `<option value="${type}">${type}</option>`).join('');
+            if (types.includes(currentValue)) select.value = currentValue;
+        }
+
+        async function updateDashboard() {
+            const filters = getFilters();
+            const [stats, data] = await Promise.all([fetchStats(filters), fetchRiskData(filters)]);
+            currentData = data || [];
+            populateContractTypes(currentData);
+            renderRiskDistribution(stats);
+            renderAmountDistribution(stats);
+            renderContractTypeDistribution(stats);
+            renderCreditDistribution(stats);
+            renderTrend(currentData);
+            renderRanking(stats);
+            renderStats(stats);
+        }
+
+        function showModal(contractType) {
+            currentDetailType = contractType;
+            document.getElementById('modalTitle').textContent = `${contractType} 明细`;
+            const rows = currentData.filter((item) => item.contract_type === contractType);
+            document.getElementById('modalBody').innerHTML = rows.map((item) => `
+                <tr>
+                    <td>${item.contract_name || '未命名合同'}</td>
+                    <td>${item.contract_type || '-'}</td>
+                    <td>${Number(item.contract_amount || 0).toFixed(2)}</td>
+                    <td>${item.party_a_credit_rating || '-'}</td>
+                    <td>${item.party_b_credit_rating || '-'}</td>
+                    <td class="${riskClass(item.risk_level)}">${normalizeRiskLevel(item.risk_level)}</td>
+                    <td>${Number(item.risk_index || 0).toFixed(2)}</td>
+                    <td>${item.customer_id || '-'}</td>
+                </tr>
+            `).join('');
+            document.getElementById('detailsModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('detailsModal').style.display = 'none';
+        }
+
+        function exportData() {
+            const rows = currentData.filter((item) => item.contract_type === currentDetailType);
+            let csv = '合同名称,合同类型,合同金额,甲方信用,乙方信用,风险等级,风险指数,客户ID\n';
+            rows.forEach((item) => {
+                csv += [
+                    item.contract_name || '',
+                    item.contract_type || '',
+                    Number(item.contract_amount || 0).toFixed(2),
+                    item.party_a_credit_rating || '',
+                    item.party_b_credit_rating || '',
+                    normalizeRiskLevel(item.risk_level),
+                    Number(item.risk_index || 0).toFixed(2),
+                    item.customer_id || '',
+                ].join(',') + '\n';
+            });
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${currentDetailType || '合同'}_明细.csv`;
+            link.click();
+        }
+
+        function applyFilters() {
+            updateDashboard();
+        }
+
+        function resetFilters() {
+            ['timeRange', 'contractType', 'riskLevel', 'amountRange', 'partyACredit', 'partyBCredit'].forEach((id) => {
+                document.getElementById(id).value = 'all';
+            });
+            updateDashboard();
+        }
+
+        function logout() {
+            if (confirm('是否退出系统？')) {
+                window.location.href = 'http://127.0.0.1:5011/';
+            }
+        }
+
+        initCharts();
+        updateDashboard();
+        setInterval(updateDashboard, 30000);
+    </script>
+</body>
+</html>

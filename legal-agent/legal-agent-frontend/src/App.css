@@ -1,0 +1,49 @@
+#root {
+  margin: 0;
+  width: 100%;
+  background-color: #f1f5f9;
+}
+
+/* 顶部Header样式 */
+.main-header {
+  padding: 0 30px !important;
+  position: fixed;
+  top: 0;
+  width: 100%;
+  z-index: 1000;
+  background: #1e3e7e !important;
+  border-bottom: none;
+  box-shadow: 0 4px 16px rgba(30, 62, 126, 0.15);
+  display: flex;
+  align-items: center;
+  height: 64px;
+}
+
+/* 菜单样式调整 */
+.ant-menu-dark {
+  background: transparent !important;
+}
+
+.ant-menu-dark .ant-menu-item {
+  font-weight: 500;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.7) !important;
+}
+
+.ant-menu-dark .ant-menu-item-selected {
+  color: #fff !important;
+  background: transparent !important;
+}
+
+/* 蓝色下划线 */
+.ant-menu-dark.ant-menu-horizontal > .ant-menu-item-selected::after {
+  border-bottom-color: #2563eb !important;
+  border-bottom-width: 3px !important;
+}
+
+/* 内容区域样式 */
+.main-content {
+  padding: 24px 30px !important;
+  min-height: calc(100vh - 64px);
+  background: transparent !important;
+}
